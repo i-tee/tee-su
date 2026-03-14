@@ -9,4 +9,14 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('profile')
+  getProfile() {
+    return {
+      name: 'Евгений Тарасов',
+      title: 'Fullstack разработчик PHP/JavaScript/TypeScript/Node.js/NestJS',
+      city: 'Москва',
+      experience: 16,
+    };
+  }
 }
