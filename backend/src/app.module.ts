@@ -4,6 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Profile } from './profile.entity';
+import { Skill } from './skill.entity';
+import { SkillsService } from './skills.service';
+import { SkillsController } from './skills.controller';
 
 @Module({
   imports: [
@@ -20,9 +23,9 @@ import { Profile } from './profile.entity';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([Profile]),
+    TypeOrmModule.forFeature([Profile, Skill]),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, SkillsController],
+  providers: [AppService, SkillsService],
 })
 export class AppModule {}
