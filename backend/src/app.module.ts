@@ -8,11 +8,16 @@ import { Skill } from './skill.entity';
 import { SkillsService } from './skills.service';
 import { SkillsController } from './skills.controller';
 
+import AdminJS from 'adminjs';
+import { AdminModule } from '@adminjs/nestjs';
+import { Database, Resource } from '@adminjs/typeorm';
+
+AdminJS.registerAdapter({ Database, Resource });
+
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
@@ -23,7 +28,30 @@ import { SkillsController } from './skills.controller';
       }),
       inject: [ConfigService],
     }),
+
     TypeOrmModule.forFeature([Profile, Skill]),
+
+    AdminModule.createAdminAsync({
+      useFactory: () => ({
+        adminJsOptions: {
+          rootPath: '/admin',
+          resources: [
+            {
+              resource: Profile,
+              options: {
+                navigation: { name: 'Контент сайта' },
+              },
+            },
+            {
+              resource: Skill,
+              options: {
+                navigation: { name: 'Контент сайта' },
+              },
+            },
+          ],
+        },
+      }),
+    }),
   ],
   controllers: [AppController, SkillsController],
   providers: [AppService, SkillsService],
