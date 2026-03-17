@@ -32,7 +32,9 @@ AdminJS.registerAdapter({ Database, Resource });
     TypeOrmModule.forFeature([Profile, Skill]),
 
     AdminModule.createAdminAsync({
-      useFactory: () => ({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
         adminJsOptions: {
           rootPath: '/admin',
           resources: [
@@ -49,6 +51,30 @@ AdminJS.registerAdapter({ Database, Resource });
               },
             },
           ],
+        },
+        auth: {
+          authenticate: async (email, password) => {
+            if (
+              email === config.get('ADMIN_EMAIL') &&
+              password === config.get('ADMIN_PASSWORD')
+            ) {
+              return Promise.resolve({ email });
+            }
+            return Promise.resolve(null);
+          },
+          cookieName: 'adminjs',
+          cookiePassword: config.get(
+            'ADMIN_COOKIE_SECRET',
+            'fallback-secret-32-chars-minimum!',
+          ),
+        },
+        sessionOptions: {
+          resave: false,
+          saveUninitialized: true,
+          secret: config.get(
+            'ADMIN_COOKIE_SECRET',
+            'fallback-secret-32-chars-minimum!',
+          ),
         },
       }),
     }),
