@@ -24,7 +24,14 @@ import { SkillGroup } from '../skill-groups/skill-group.entity';
               },
               {
                 resource: Skill,
-                options: { navigation: { name: 'Контент сайта' } },
+                options: {
+                  navigation: { name: 'Контент сайта' },
+                  properties: {
+                    groupId: {
+                      reference: 'SkillGroup',
+                    },
+                  },
+                },
               },
               {
                 resource: SkillGroup,
