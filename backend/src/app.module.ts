@@ -3,17 +3,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { Profile } from './profile.entity';
-import { Skill } from './skill.entity';
 import { SkillsService } from './skills.service';
 import { SkillsController } from './skills.controller';
-
-import AdminJS from 'adminjs';
-import { AdminModule } from '@adminjs/nestjs';
-import { Database, Resource } from '@adminjs/typeorm';
-
-AdminJS.registerAdapter({ Database, Resource });
-
+import { AdminPanelModule } from './admin/admin.module';
+import { Profile } from './profile.entity';
+import { Skill } from './skill.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -31,53 +25,7 @@ AdminJS.registerAdapter({ Database, Resource });
 
     TypeOrmModule.forFeature([Profile, Skill]),
 
-    AdminModule.createAdminAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        adminJsOptions: {
-          rootPath: '/admin',
-          resources: [
-            {
-              resource: Profile,
-              options: {
-                navigation: { name: 'Контент сайта' },
-              },
-            },
-            {
-              resource: Skill,
-              options: {
-                navigation: { name: 'Контент сайта' },
-              },
-            },
-          ],
-        },
-        auth: {
-          authenticate: async (email, password) => {
-            if (
-              email === config.get('ADMIN_EMAIL') &&
-              password === config.get('ADMIN_PASSWORD')
-            ) {
-              return Promise.resolve({ email });
-            }
-            return Promise.resolve(null);
-          },
-          cookieName: 'adminjs',
-          cookiePassword: config.get(
-            'ADMIN_COOKIE_SECRET',
-            'fallback-secret-32-chars-minimum!',
-          ),
-        },
-        sessionOptions: {
-          resave: false,
-          saveUninitialized: true,
-          secret: config.get(
-            'ADMIN_COOKIE_SECRET',
-            'fallback-secret-32-chars-minimum!',
-          ),
-        },
-      }),
-    }),
+    AdminPanelModule,
   ],
   controllers: [AppController, SkillsController],
   providers: [AppService, SkillsService],
