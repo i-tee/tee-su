@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AdminModule as AdminJSModule } from '@adminjs/nestjs';
 import { Profile } from '../profile/profile.entity';
 import { Skill } from '../skills/skill.entity';
+import { SkillGroup } from '../skill-groups/skill-group.entity';
 
 @Module({
   imports: [
@@ -23,6 +24,10 @@ import { Skill } from '../skills/skill.entity';
               },
               {
                 resource: Skill,
+                options: { navigation: { name: 'Контент сайта' } },
+              },
+              {
+                resource: SkillGroup,
                 options: { navigation: { name: 'Контент сайта' } },
               },
             ],

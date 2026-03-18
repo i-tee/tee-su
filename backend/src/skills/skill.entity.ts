@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  BaseEntity,
+  ManyToOne,
+} from 'typeorm';
+import { SkillGroup } from '../skill-groups/skill-group.entity';
 
 @Entity()
 export class Skill extends BaseEntity {
@@ -8,21 +15,12 @@ export class Skill extends BaseEntity {
   @Column()
   name: string;
 
-  @Column({ default: '' })
-  category: string;
-
   @Column({ default: false })
   isNew: boolean;
 
-  @Column({ nullable: true })
-  iconUrl: string;
-
-  @Column({ default: 0 })
-  level: number;
-
-  @Column({ default: false })
-  featured: boolean;
-
   @Column({ default: 0 })
   order: number;
+
+  @ManyToOne(() => SkillGroup, (group) => group.skills)
+  group: SkillGroup;
 }

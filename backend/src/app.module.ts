@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProfileModule } from './profile/profile.module';
 import { SkillsModule } from './skills/skills.module';
+import { SkillGroupsModule } from './skill-groups/skill-groups.module';
 import { AdminPanelModule } from './admin/admin.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { AdminPanelModule } from './admin/admin.module';
     }),
     ProfileModule,
     SkillsModule,
+    SkillGroupsModule,
     AdminPanelModule,
   ],
 })
