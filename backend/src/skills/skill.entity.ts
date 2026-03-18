@@ -8,9 +8,21 @@ export class Skill extends BaseEntity {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ default: '' })
   category: string;
 
   @Column({ default: false })
   isNew: boolean;
+
+  @Column({ nullable: true })
+  iconUrl: string;
+
+  @Column({ default: 0 })
+  level: number;
+
+  @Column({ default: false })
+  featured: boolean;
+
+  @Column({ default: 0 })
+  order: number;
 }

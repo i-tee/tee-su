@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Skill } from './skill.entity';
+import { Skill } from './skill.entity'; // ← было ../skill.entity
 
 @Injectable()
 export class SkillsService {
@@ -11,6 +11,6 @@ export class SkillsService {
   ) {}
 
   findAll(): Promise<Skill[]> {
-    return this.skillsRepository.find();
+    return this.skillsRepository.find({ order: { order: 'ASC' } });
   }
 }

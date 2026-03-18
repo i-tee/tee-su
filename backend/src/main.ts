@@ -1,9 +1,13 @@
+import AdminJS from 'adminjs';
+import { Database, Resource } from '@adminjs/typeorm';
+AdminJS.registerAdapter({ Database, Resource });
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    bodyParser: false, // ← отключаем глобально, AdminJS использует свой парсер
+    bodyParser: false,
   });
   await app.listen(4000, '0.0.0.0');
 }

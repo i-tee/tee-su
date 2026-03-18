@@ -1,17 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { SkillsService } from './skills.service';
-import { SkillsController } from './skills.controller';
+import { ProfileModule } from './profile/profile.module';
+import { SkillsModule } from './skills/skills.module';
 import { AdminPanelModule } from './admin/admin.module';
-import { Profile } from './profile.entity';
-import { Skill } from './skill.entity';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
@@ -22,12 +18,9 @@ import { Skill } from './skill.entity';
       }),
       inject: [ConfigService],
     }),
-
-    TypeOrmModule.forFeature([Profile, Skill]),
-
+    ProfileModule,
+    SkillsModule,
     AdminPanelModule,
   ],
-  controllers: [AppController, SkillsController],
-  providers: [AppService, SkillsService],
 })
 export class AppModule {}

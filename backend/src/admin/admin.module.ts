@@ -1,13 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AdminModule as AdminJSModule } from '@adminjs/nestjs';
-import { Database, Resource } from '@adminjs/typeorm';
-import AdminJS from 'adminjs';
-
-import { Profile } from '../profile.entity';
-import { Skill } from '../skill.entity';
-
-AdminJS.registerAdapter({ Database, Resource });
+import { Profile } from '../profile/profile.entity';
+import { Skill } from '../skills/skill.entity';
 
 @Module({
   imports: [
