@@ -14,8 +14,8 @@ export class Profile extends BaseEntity {
   @Column({ default: '' })
   city: string;
 
-  @Column({ default: 0 })
-  experience: number;
+  @Column({ type: 'date', nullable: true })
+  experience_start: Date;
 
   @Column({ default: '' })
   tagline: string;

@@ -5,11 +5,6 @@ import { ProfileService } from './profile.service';
 export class ProfileController {
   constructor(private service: ProfileService) {}
 
-  @Get()
-  root(): string {
-    return 'API работает!';
-  }
-
   @Get('profile')
   getProfile() {
     return this.service.getProfile();

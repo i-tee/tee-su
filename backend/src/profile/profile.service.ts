@@ -14,9 +14,9 @@ export class ProfileService implements OnModuleInit {
     const count = await this.repo.count();
     if (count === 0) {
       await this.repo.save({
-        name: 'Евгений Тарасов',
-        title: 'Fullstack / AI Developer',
-        city: 'Одинцово, Москва',
+        name: 'Evgeny Tarasov',
+        title: 'Fullstack WEB/AI Developer, DevOps Engineer',
+        city: 'Moscow, Russia',
         experience: 16,
         tagline: '',
         heroText: '',
