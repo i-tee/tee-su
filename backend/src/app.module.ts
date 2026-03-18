@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AdminPanelModule } from './admin/admin.module';
 import { ProfileModule } from './profile/profile.module';
 import { SkillsModule } from './skills/skills.module';
 import { SkillGroupsModule } from './skill-groups/skill-groups.module';
-import { AdminPanelModule } from './admin/admin.module';
+import { EducationModule } from './education/education.module';
 
 @Module({
   imports: [
@@ -19,10 +20,11 @@ import { AdminPanelModule } from './admin/admin.module';
       }),
       inject: [ConfigService],
     }),
+    AdminPanelModule,
     ProfileModule,
     SkillsModule,
     SkillGroupsModule,
-    AdminPanelModule,
+    EducationModule,
   ],
 })
 export class AppModule {}

@@ -4,6 +4,7 @@ import { AdminModule as AdminJSModule } from '@adminjs/nestjs';
 import { Profile } from '../profile/profile.entity';
 import { Skill } from '../skills/skill.entity';
 import { SkillGroup } from '../skill-groups/skill-group.entity';
+import { Education } from '../education/education.entity';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { SkillGroup } from '../skill-groups/skill-group.entity';
       useFactory: (config: ConfigService) => {
         // Читаем флаг из .env, по умолчанию false (локалка открыта)
         const authEnabled = config.get('ADMIN_AUTH_ENABLED') === 'true';
+        const menuName = 'Entityes';
 
         return {
           adminJsOptions: {
@@ -20,12 +22,12 @@ import { SkillGroup } from '../skill-groups/skill-group.entity';
             resources: [
               {
                 resource: Profile,
-                options: { navigation: { name: 'Контент сайта' } },
+                options: { navigation: { name: menuName } },
               },
               {
                 resource: Skill,
                 options: {
-                  navigation: { name: 'Контент сайта' },
+                  navigation: { name: menuName },
                   properties: {
                     groupId: {
                       reference: 'SkillGroup',
@@ -35,7 +37,11 @@ import { SkillGroup } from '../skill-groups/skill-group.entity';
               },
               {
                 resource: SkillGroup,
-                options: { navigation: { name: 'Контент сайта' } },
+                options: { navigation: { name: menuName } },
+              },
+              {
+                resource: Education,
+                options: { navigation: { name: menuName } },
               },
             ],
           },
