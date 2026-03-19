@@ -7,9 +7,8 @@ import { SkillGroup } from '../skill-groups/skill-group.entity';
 import { Education } from '../education/education.entity';
 import { Image } from '../images/image.entity';
 import { join } from 'path';
-
 import uploadFeature from '@adminjs/upload';
-import { buildFeature } from 'adminjs';
+import { buildFeature, ActionResponse } from 'adminjs';
 import { ImagesModule } from '../images/images.module';
 import { S3UploadService } from '../images/s3-upload.service';
 
@@ -25,23 +24,37 @@ import { S3UploadService } from '../images/s3-upload.service';
         const s3AfterFeature = buildFeature({
           actions: {
             new: {
-              after: async (response) => {
-                const id = response.record?.id;
+              after: async (
+                response: ActionResponse,
+              ): Promise<ActionResponse> => {
+                const record = response.record as
+                  | { id?: string | number }
+                  | undefined;
+                const id = record?.id;
                 if (id) {
                   await s3UploadService
                     .handlePostUpload(Number(id))
-                    .catch((err) => console.error('[S3] Ошибка после загрузки:', err));
+                    .catch((err) =>
+                      console.error('[S3] Ошибка после загрузки:', err),
+                    );
                 }
                 return response;
               },
             },
             edit: {
-              after: async (response) => {
-                const id = response.record?.id;
+              after: async (
+                response: ActionResponse,
+              ): Promise<ActionResponse> => {
+                const record = response.record as
+                  | { id?: string | number }
+                  | undefined;
+                const id = record?.id;
                 if (id) {
                   await s3UploadService
                     .handlePostUpload(Number(id))
-                    .catch((err) => console.error('[S3] Ошибка после редактирования:', err));
+                    .catch((err) =>
+                      console.error('[S3] Ошибка после редактирования:', err),
+                    );
                 }
                 return response;
               },
