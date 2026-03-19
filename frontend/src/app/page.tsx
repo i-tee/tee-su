@@ -1,20 +1,30 @@
 import { cookies } from 'next/headers'
-import Nav from '@/components/Nav/Nav'
-import type { Theme } from '@/components/Nav/Nav'
+import Nav, { type Theme } from '@/components/Nav/Nav'
+import Hero from '@/components/Hero/Hero'
+import { getImages } from '@/services/pageService'
 
 export default async function Page() {
   const cookieStore = await cookies()
-  const themeCookie = cookieStore.get('theme')?.value
-  const initialTheme: Theme =
-    themeCookie === 'light' || themeCookie === 'dark' ? themeCookie : 'dark'
+  const initialTheme = (cookieStore.get('theme')?.value ?? 'dark') as Theme
+
+  // Все данные с бэкенда — через сервис
+  const images = await getImages()
+
+  // sortOrder 1 — светлая, sortOrder 2 — тёмная
+  const lightImage = images.find((img) => img.sortOrder === 1)
+  const darkImage = images.find((img) => img.sortOrder === 2)
 
   return (
     <>
       <Nav initialTheme={initialTheme} />
-      <main style={{ padding: '8rem 4rem 2rem' }}>
-        <h1 style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>
-          Nav works ✅
-        </h1>
+      <main>
+        <Hero
+          initialTheme={initialTheme}
+          lightImageUrl={lightImage?.url ?? ''}
+          lightImageAlt={lightImage?.alt ?? ''}
+          darkImageUrl={darkImage?.url ?? ''}
+          darkImageAlt={darkImage?.alt ?? ''}
+        />
       </main>
     </>
   )
