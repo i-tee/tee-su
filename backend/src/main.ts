@@ -12,6 +12,15 @@ async function bootstrap() {
     bodyParser: false,
   });
 
+  // Если AdminJS подставил /uploads/ перед полным S3-URL — редиректим на реальный адрес
+  app.use('/uploads', (req: any, res: any, next: any) => {
+    const path = req.url.replace(/^\//, '');
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return res.redirect(302, path);
+    }
+    next();
+  });
+
   // Раздаём папку uploads как статику
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads',
