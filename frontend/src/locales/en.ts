@@ -5,7 +5,7 @@ export const en = {
   },
 
   nav: {
-    logo: '_itee.dev',
+    logo: 'tee.su',
     stack: 'Stack',
     agent: 'AI Agent',
     about: 'About',

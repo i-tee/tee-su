@@ -5,7 +5,7 @@ export const ru = {
   },
 
   nav: {
-    logo: '_itee.dev',
+    logo: 'tee.su',
     stack: 'Стек',
     agent: 'AI-агент',
     about: 'Обо мне',
