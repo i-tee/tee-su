@@ -1,47 +1,26 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocale } from '@/context/LocaleContext'
 import type { Locale } from '@/locales'
 import styles from './Nav.module.css'
 
-type Theme = 'dark' | 'light'
+export type Theme = 'dark' | 'light'
 
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null
-  const found = document.cookie
-    .split(';')
-    .find((c) => c.trim().startsWith(name + '='))
-  return found ? found.split('=')[1].trim() : null
-}
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value};path=/;max-age=31536000`
 }
 
-export default function Nav() {
+export default function Nav({ initialTheme = 'dark' }: { initialTheme?: Theme }) {
   const { t, locale, setLocale } = useLocale()
 
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>(initialTheme)
   const [scrolled, setScrolled] = useState(false)
 
-  const applyTheme = useCallback((next: Theme) => {
-    setTheme(next)
-    document.documentElement.setAttribute('data-theme', next)
-  }, [])
-
   useEffect(() => {
-    const saved = getCookie('theme') as Theme | null
-    if (saved) {
-      applyTheme(saved)
-    } else {
-      const preferred = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
-        ? 'dark'
-        : 'light'
-      applyTheme(preferred)
-    }
-  }, [applyTheme])
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -51,7 +30,7 @@ export default function Nav() {
 
   function toggleTheme() {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
+    setTheme(next)
     setCookie('theme', next)
   }
 

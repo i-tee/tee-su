@@ -22,19 +22,14 @@ const LocaleContext = createContext<LocaleContextValue>({
   setLocale: () => {},
 })
 
-// Читаем куки — работает и на сервере и на клиенте
-function getLocaleCookie(): Locale {
-  if (typeof document === 'undefined') return defaultLocale
-  const found = document.cookie
-    .split(';')
-    .find((c) => c.trim().startsWith('locale='))
-  const value = found?.split('=')[1]?.trim()
-  return value === 'en' || value === 'ru' ? value : defaultLocale
-}
-
-export function LocaleProvider({ children }: { children: ReactNode }) {
-  // Инициализируем сразу из куки — без useEffect, без расхождений
-  const [locale, setLocaleState] = useState<Locale>(() => getLocaleCookie())
+export function LocaleProvider({
+  children,
+  initialLocale = defaultLocale,
+}: {
+  children: ReactNode
+  initialLocale?: Locale
+}) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale)
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next)

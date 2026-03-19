@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { cookies } from 'next/headers'
 import { LocaleProvider } from '@/context/LocaleContext'
+import type { Locale } from '@/locales'
 import './globals.css'
 
 const geistSans = Geist({
@@ -32,11 +34,16 @@ const THEME_SCRIPT = `
 })()
 `.trim()
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const cookieStore = await cookies()
+  const localeCookie = cookieStore.get('locale')?.value
+  const initialLocale: Locale =
+    localeCookie === 'en' || localeCookie === 'ru' ? localeCookie : 'en'
+
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
@@ -45,7 +52,7 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {/* LocaleProvider даёт доступ к переводам через useLocale() */}
-        <LocaleProvider>{children}</LocaleProvider>
+        <LocaleProvider initialLocale={initialLocale}>{children}</LocaleProvider>
       </body>
     </html>
   )
