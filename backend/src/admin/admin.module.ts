@@ -5,6 +5,10 @@ import { Profile } from '../profile/profile.entity';
 import { Skill } from '../skills/skill.entity';
 import { SkillGroup } from '../skill-groups/skill-group.entity';
 import { Education } from '../education/education.entity';
+import { Image } from '../images/image.entity';
+import { join } from 'path';
+
+import uploadFeature from '@adminjs/upload';
 
 @Module({
   imports: [
@@ -12,7 +16,6 @@ import { Education } from '../education/education.entity';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        // Читаем флаг из .env, по умолчанию false (локалка открыта)
         const authEnabled = config.get('ADMIN_AUTH_ENABLED') === 'true';
         const menuName = 'Entityes';
 
@@ -29,9 +32,7 @@ import { Education } from '../education/education.entity';
                 options: {
                   navigation: { name: menuName },
                   properties: {
-                    groupId: {
-                      reference: 'SkillGroup',
-                    },
+                    groupId: { reference: 'SkillGroup' },
                   },
                 },
               },
@@ -43,11 +44,52 @@ import { Education } from '../education/education.entity';
                 resource: Education,
                 options: { navigation: { name: menuName } },
               },
+              {
+                resource: Image,
+                options: {
+                  navigation: { name: menuName },
+                  properties: {
+                    url: {
+                      isVisible: {
+                        list: true,
+                        show: true,
+                        edit: false,
+                        filter: false,
+                      },
+                    },
+                    mimeType: {
+                      isVisible: {
+                        list: false,
+                        show: true,
+                        edit: false,
+                        filter: false,
+                      },
+                    },
+                    description: { type: 'textarea' },
+                  },
+                },
+                features: [
+                  uploadFeature({
+                    provider: {
+                      local: {
+                        bucket: join(__dirname, '..', '..', 'uploads'),
+                        opts: {
+                          baseUrl: '/uploads',
+                        },
+                      },
+                    },
+                    properties: {
+                      key: 'url',
+                      mimeType: 'mimeType',
+                    },
+                    uploadPath: (_record, filename) =>
+                      `${Date.now()}-${filename}`,
+                  }),
+                ],
+              },
             ],
           },
 
-          // Spread с условием — если false, ключи auth и sessionOptions
-          // вообще не попадают в объект, AdminJS видит конфиг без auth
           ...(authEnabled && {
             auth: {
               authenticate: async (email, password) => {
