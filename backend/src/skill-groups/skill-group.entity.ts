@@ -21,6 +21,9 @@ export class SkillGroup extends BaseEntity {
   @Column({ default: 0 })
   order: number;
 
+  @Column({ default: '' })
+  category: string;
+
   @OneToMany(() => Skill, (skill) => skill.group)
   skills: Skill[];
 }

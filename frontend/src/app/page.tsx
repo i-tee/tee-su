@@ -1,16 +1,19 @@
 import { cookies } from 'next/headers'
 import Nav, { type Theme } from '@/components/Nav/Nav'
 import Hero from '@/components/Hero/Hero'
-import { getImages } from '@/services/pageService'
+import Stack from '@/components/Stack/Stack'
+import { getImages, getSkillGroups } from '@/services/pageService'
 
 export default async function Page() {
   const cookieStore = await cookies()
   const initialTheme = (cookieStore.get('theme')?.value ?? 'dark') as Theme
 
-  // Все данные с бэкенда — через сервис
-  const images = await getImages()
+  // Все данные с бэкенда
+  const [images, skillGroups] = await Promise.all([
+    getImages(),
+    getSkillGroups(),
+  ])
 
-  // sortOrder 1 — светлая, sortOrder 2 — тёмная
   const lightImage = images.find((img) => img.sortOrder === 1)
   const darkImage = images.find((img) => img.sortOrder === 2)
 
@@ -25,6 +28,7 @@ export default async function Page() {
           darkImageUrl={darkImage?.url ?? ''}
           darkImageAlt={darkImage?.alt ?? ''}
         />
+        <Stack skillGroups={skillGroups} />
       </main>
     </>
   )

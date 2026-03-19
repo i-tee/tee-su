@@ -4,7 +4,7 @@ import {
   Column,
   BaseEntity,
   ManyToOne,
-  JoinColumn, // ← добавить импорт
+  JoinColumn,
 } from 'typeorm';
 import { SkillGroup } from '../skill-groups/skill-group.entity';
 
@@ -22,10 +22,16 @@ export class Skill extends BaseEntity {
   @Column({ default: 0 })
   order: number;
 
-  @Column({ nullable: true }) // ← добавить явный FK-столбец
+  @Column({ nullable: true })
   groupId: number;
 
+  @Column({ default: 0 })
+  level: number;
+
+  @Column({ default: false })
+  isHighlighted: boolean;
+
   @ManyToOne(() => SkillGroup, (group) => group.skills)
-  @JoinColumn({ name: 'groupId' }) // ← связать с колонкой выше
+  @JoinColumn({ name: 'groupId' })
   group: SkillGroup;
 }
