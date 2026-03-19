@@ -28,4 +28,7 @@ export class Image extends BaseEntity {
 
   @Column({ default: 0 })
   sortOrder: number;
+
+  @Column({ default: false })
+  saveToS3: boolean;
 }

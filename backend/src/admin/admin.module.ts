@@ -9,15 +9,45 @@ import { Image } from '../images/image.entity';
 import { join } from 'path';
 
 import uploadFeature from '@adminjs/upload';
+import { buildFeature } from 'adminjs';
+import { ImagesModule } from '../images/images.module';
+import { S3UploadService } from '../images/s3-upload.service';
 
 @Module({
   imports: [
     AdminJSModule.createAdminAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
+      imports: [ConfigModule, ImagesModule],
+      inject: [ConfigService, S3UploadService],
+      useFactory: (config: ConfigService, s3UploadService: S3UploadService) => {
         const authEnabled = config.get('ADMIN_AUTH_ENABLED') === 'true';
         const menuName = 'Entityes';
+
+        const s3AfterFeature = buildFeature({
+          actions: {
+            new: {
+              after: async (response) => {
+                const id = response.record?.id;
+                if (id) {
+                  await s3UploadService
+                    .handlePostUpload(Number(id))
+                    .catch((err) => console.error('[S3] Ошибка после загрузки:', err));
+                }
+                return response;
+              },
+            },
+            edit: {
+              after: async (response) => {
+                const id = response.record?.id;
+                if (id) {
+                  await s3UploadService
+                    .handlePostUpload(Number(id))
+                    .catch((err) => console.error('[S3] Ошибка после редактирования:', err));
+                }
+                return response;
+              },
+            },
+          },
+        });
 
         return {
           adminJsOptions: {
@@ -65,6 +95,15 @@ import uploadFeature from '@adminjs/upload';
                         filter: false,
                       },
                     },
+                    saveToS3: {
+                      isVisible: {
+                        list: false,
+                        show: true,
+                        edit: true,
+                        filter: false,
+                      },
+                      description: 'Загрузить в S3 после сохранения',
+                    },
                     description: { type: 'textarea' },
                   },
                 },
@@ -85,6 +124,7 @@ import uploadFeature from '@adminjs/upload';
                     uploadPath: (_record, filename) =>
                       `${Date.now()}-${filename}`,
                   }),
+                  s3AfterFeature,
                 ],
               },
             ],
