@@ -7,12 +7,15 @@ import styles from './Nav.module.css'
 
 export type Theme = 'dark' | 'light'
 
-
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value};path=/;max-age=31536000`
 }
 
-export default function Nav({ initialTheme = 'dark' }: { initialTheme?: Theme }) {
+export default function Nav({
+  initialTheme = 'dark',
+}: {
+  initialTheme?: Theme
+}) {
   const { t, locale, setLocale } = useLocale()
 
   const [theme, setTheme] = useState<Theme>(initialTheme)
