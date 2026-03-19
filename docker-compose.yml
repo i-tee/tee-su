@@ -1,5 +1,6 @@
 services:
   frontend:
+    container_name: tee-su-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
@@ -15,6 +16,7 @@ services:
       - backend
 
   backend:
+    container_name: tee-su-backend
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -29,6 +31,7 @@ services:
       - db
 
   db:
+    container_name: tee-su-db
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
