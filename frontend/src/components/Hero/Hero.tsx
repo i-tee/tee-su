@@ -4,6 +4,7 @@ import { useRef, useEffect } from 'react'
 import { useLocale } from '@/context/LocaleContext'
 import type { Theme } from '@/components/Nav/Nav'
 import styles from './Hero.module.css'
+import Image from 'next/image'
 
 // ─── Типы пропов ─────────────────────────────────────────
 interface HeroProps {
@@ -226,17 +227,29 @@ export default function Hero({
         {/* ── Правая колонка — аватар ── */}
         <div className={styles.avatarWrap}>
           {/* Светлая тема */}
-          <img
-            className={`${styles.avatar} ${styles.avatarLight}`}
-            src={lightImageUrl}
-            alt={lightImageAlt}
-          />
+          {lightImageUrl && (
+            <Image
+              className={`${styles.avatar} ${styles.avatarLight}`}
+              src={lightImageUrl}
+              alt={lightImageAlt}
+              width={600}
+              height={600}
+              style={{ objectFit: 'cover' }}
+              priority
+            />
+          )}
           {/* Тёмная тема */}
-          <img
-            className={`${styles.avatar} ${styles.avatarDark}`}
-            src={darkImageUrl}
-            alt={darkImageAlt}
-          />
+          {darkImageUrl && (
+            <Image
+              className={`${styles.avatar} ${styles.avatarDark}`}
+              src={darkImageUrl}
+              alt={darkImageAlt}
+              width={600}
+              height={600}
+              style={{ objectFit: 'cover' }}
+              priority
+            />
+          )}
           <div className={styles.avatarOverlay} aria-hidden />
           <span className={`${styles.corner} ${styles.cornerTL}`} aria-hidden />
           <span className={`${styles.corner} ${styles.cornerTR}`} aria-hidden />
