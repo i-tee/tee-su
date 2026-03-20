@@ -4,7 +4,9 @@ import { useRef, useEffect } from 'react'
 import { useLocale } from '@/context/LocaleContext'
 import type { Theme } from '@/components/Nav/Nav'
 import styles from './Hero.module.css'
+import heroEffectsStyles from './HeroEffects.module.css'
 import Image from 'next/image'
+import HeroEffects from './HeroEffects'
 
 // ─── Типы пропов ─────────────────────────────────────────
 interface HeroProps {
@@ -159,6 +161,7 @@ export default function Hero({
 
   return (
     <section className={styles.hero} id="hero">
+      <HeroEffects />
       {/* Фон */}
       <div className={styles.grid} aria-hidden />
       <div className={`${styles.orb} ${styles.orb1}`} aria-hidden />
@@ -182,7 +185,13 @@ export default function Hero({
 
           <h1 className={styles.h1}>
             <span>{t.hero.first_name}</span>
-            <span className={styles.accentName}>{t.hero.last_name}</span>
+
+            <span
+              className={`${styles.accentName} ${heroEffectsStyles.glitch}`}
+              data-text={t.hero.last_name}
+            >
+              {t.hero.last_name}
+            </span>
           </h1>
 
           <p className={styles.typewriterWrap}>

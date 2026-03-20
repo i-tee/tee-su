@@ -14,23 +14,24 @@ export default function StackCards({ skillGroups }: StackCardsProps) {
         .sort((a, b) => a.order - b.order)
         .map((group) => (
           <div key={group.id} className={styles.card}>
-            {group.category && (
-              <div className={styles.cardCat}>{group.category}</div>
-            )}
-            <div className={styles.cardName}>{group.title}</div>
+            {/* Категория сверху — subtitle */}
             {group.subtitle && (
-              <div className={styles.cardSub}>{group.subtitle}</div>
+              <div className={styles.cardCat}>{group.subtitle}</div>
             )}
+
+            {/* Название */}
+            <div className={styles.cardName}>{group.title}</div>
+
+            {/* Теги */}
             <div className={styles.tags}>
               {group.skills
                 .sort((a, b) => a.order - b.order)
                 .map((skill) => (
                   <span
                     key={skill.id}
-                    className={`${styles.tag} ${skill.isHighlighted ? styles.tagGreen : ''}`}
+                    className={`${styles.tag} ${skill.isNew ? styles.tagGreen : ''}`}
                   >
                     {skill.name}
-                    {skill.isNew && <span className={styles.tagNew}>new</span>}
                   </span>
                 ))}
             </div>
