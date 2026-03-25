@@ -165,73 +165,102 @@ The project is intentionally minimal. Common extension points:
 
 ## Production Deployment
 
-### Requirements
+### Server requirements
 
-- Server with Docker installed (2 CPU / 4 GB RAM recommended)
-- Domain pointed to the server IP (A-записи для `tee.su` и `www.tee.su`)
-- Ports 80 and 443 open in firewall
+- 2 CPU / 4 GB RAM / 20 GB NVMe (минимум для билда на сервере)
+- Ubuntu 22.04+
+- Docker installed
+- Domain A-records pointed to the server IP (`tee.su` и `www.tee.su`)
 
-### First deploy
+---
+
+### Step 1 — Prepare the server
 
 ```bash
-# 1. Install Docker (if not installed)
+# Install Docker
 curl -fsSL https://get.docker.com | sh
+```
 
-# 2. Clone the repository
+---
+
+### Step 2 — Clone and configure
+
+```bash
 git clone <repo-url>
 cd tee-su
 
-# 3. Configure environment
+# Copy and fill in environment variables
 cp backend/.env.example backend/.env
-nano backend/.env  # fill in real values
+nano backend/.env
+```
 
-# 4. Deploy (HTTP first)
+---
+
+### Step 3 — First deploy (HTTP)
+
+```bash
 bash deploy.sh
 ```
+
+Verify the site is working over HTTP before proceeding:
 
 | Service | URL |
 |---|---|
 | Frontend | http://tee.su |
 | Admin Panel | http://tee.su/admin |
 
+---
+
+### Step 4 — Enable HTTPS
+
+> Run once, after the site is accessible over HTTP.
+
+```bash
+# Install certbot
+apt install -y certbot
+
+# Get certificate and switch nginx to HTTPS
+bash ssl-init.sh
+```
+
+The script:
+1. Stops nginx temporarily to free port 80
+2. Obtains a Let's Encrypt certificate
+3. Switches nginx config to the SSL version (`nginx/nginx.ssl.conf`)
+4. Restarts nginx on ports 80 + 443 — HTTP redirects to HTTPS automatically
+
+---
+
+### Step 5 — Set up SSL auto-renewal
+
+```bash
+crontab -e
+```
+
+Add at the end:
+
+```
+0 3 * * * certbot renew --quiet && docker compose -f /var/www/tee-su/docker-compose.prod.yml restart nginx
+```
+
+---
+
 ### Subsequent deploys
+
+Every time you push new code, just run on the server:
 
 ```bash
 bash deploy.sh
 ```
 
-The script pulls the latest code, rebuilds images, restarts containers, and cleans up old images.
+The script pulls latest code, rebuilds images, restarts containers, and removes old images.
 
-### SSL (HTTPS)
-
-> Run this **once**, after the domain is already pointed to the server and the site works over HTTP.
-
-```bash
-# 1. Install certbot on the server
-apt install -y certbot
-
-# 2. Run SSL init script (stops nginx briefly, gets cert, restarts with HTTPS)
-bash ssl-init.sh
-```
-
-The script will:
-1. Stop nginx to free port 80
-2. Obtain a Let's Encrypt certificate via certbot standalone
-3. Replace `nginx/nginx.conf` with the SSL version
-4. Restart nginx on ports 80 + 443
-
-After that, HTTP automatically redirects to HTTPS.
-
-**Auto-renewal** — add to crontab (`crontab -e`):
-
-```bash
-0 3 * * * certbot renew --quiet && docker compose -f /root/tee-su/docker-compose.prod.yml restart nginx
-```
+---
 
 ### Useful commands
 
 ```bash
-# View logs
+# View all logs
 docker compose -f docker-compose.prod.yml logs -f
 
 # View logs for a specific service
