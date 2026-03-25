@@ -34,9 +34,25 @@ export interface ApiSkillGroup {
   skills: ApiSkill[]
 }
 
-// Сюда будем добавлять новые типы по мере роста:
-// export interface ApiProfile { ... }
-// export interface ApiSkill   { ... }
+export interface ApiEducation {
+  id: number
+  year: string
+  institution: string
+  specialty: string
+  order: number
+}
+
+export interface ApiProfile {
+  id: number
+  name: string
+  title: string
+  city: string
+  experience_start: string
+  tagline: string
+  heroText: string
+  statsProjects: number
+  statsBots: number
+}
 
 // ─── Запросы ─────────────────────────────────────────────
 
@@ -64,7 +80,26 @@ export async function getSkillGroups(): Promise<ApiSkillGroup[]> {
   }
 }
 
-// Сюда добавим позже:
-// export async function getProfile()  { ... }
-// export async function getSkills()   { ... }
-// export async function getEducation(){ ... }
+export async function getEducation(): Promise<ApiEducation[]> {
+  try {
+    const res = await fetch(`${API_URL}/education`, {
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
+}
+
+export async function getProfile(): Promise<ApiProfile | null> {
+  try {
+    const res = await fetch(`${API_URL}/profile`, {
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}

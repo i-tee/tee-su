@@ -1,0 +1,198 @@
+.section {
+    padding: 100px 60px;
+    border-top: 1px solid var(--border);
+}
+
+.tag {
+    font-family: var(--font-geist-mono), monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.tag::before {
+    content: '// ';
+    color: var(--muted);
+}
+
+.title {
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 48px;
+}
+
+/* Grid — на десктопе только одна колонка (текст), фото скрыто */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-width: 800px;
+}
+
+/* ── Фото (скрыто на десктопе, показывается только на мобильном) ── */
+.photoWrap {
+    display: none; /* скрыто по умолчанию */
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+    box-shadow: 0 0 60px rgba(124, 106, 247, .12), 0 24px 48px rgba(0, 0, 0, .35);
+    margin-bottom: 32px;
+}
+
+/* Переключение тёмная/светлая — та же логика что в Hero */
+.avatar {
+    width: 100%;
+    display: block;
+    filter: saturate(.95);
+    transition: opacity .5s ease;
+}
+
+.avatarLight {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatarDark {
+    opacity: 1;
+}
+
+[data-theme='light'] .avatarLight {
+    opacity: 1;
+}
+
+[data-theme='light'] .avatarDark {
+    opacity: 0;
+}
+
+.photoOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--bg) 0%, transparent 45%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 3;
+}
+
+.cornerTL {
+    top: 12px;
+    left: 12px;
+    border-top: 2px solid var(--accent);
+    border-left: 2px solid var(--accent);
+}
+
+.cornerTR {
+    top: 12px;
+    right: 12px;
+    border-top: 2px solid var(--accent);
+    border-right: 2px solid var(--accent);
+}
+
+/* ── Bio ── */
+.bio p {
+    font-size: 15px;
+    color: var(--muted2);
+    line-height: 1.85;
+    margin-bottom: 20px;
+}
+
+.bio p:last-of-type {
+    color: var(--text);
+    font-weight: 500;
+}
+
+/* ── Education ── */
+.eduHeader {
+    font-family: var(--font-geist-mono), monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    margin-top: 40px;
+}
+
+/* ── Timeline ── */
+.timeline {
+    position: relative;
+    padding-left: 32px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 8px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border2);
+}
+
+.timelineItem {
+    position: relative;
+    margin-bottom: 28px;
+}
+
+.timelineItem::before {
+    content: '';
+    position: absolute;
+    left: -28px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--bg2);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 12px rgba(124, 106, 247, .4);
+}
+
+.timelineDate {
+    font-family: var(--font-geist-mono), monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+}
+
+.timelineTitle {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    letter-spacing: -0.01em;
+}
+
+.timelineDesc {
+    font-size: 13px;
+    color: var(--muted2);
+    font-family: var(--font-geist-mono), monospace;
+    line-height: 1.5;
+}
+
+/* ── Mobile — фото показывается только здесь ── */
+@media (max-width: 900px) {
+    .section {
+        padding: 64px 24px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+    }
+
+    .photoWrap {
+        display: block; /* показываем на мобильном */
+    }
+}
