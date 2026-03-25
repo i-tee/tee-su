@@ -62,7 +62,10 @@ tee-su/
 │       ├── skill-groups/
 │       └── education/
 │
-└── docker-compose.yml
+├── nginx/
+│   └── nginx.conf         # Reverse proxy (prod)
+├── docker-compose.yml     # Development
+└── docker-compose.prod.yml # Production
 ```
 
 ---
@@ -157,3 +160,89 @@ The project is intentionally minimal. Common extension points:
 - **Auth** — enable `ADMIN_AUTH_ENABLED=true` and set credentials in `.env`
 - **Frontend pages** — add routes under `frontend/src/app/`
 - **CI/CD** — add a `Dockerfile` for production builds alongside the existing `Dockerfile.dev`
+
+---
+
+## Production Deployment
+
+### Requirements
+
+- Server with Docker installed (2 CPU / 4 GB RAM recommended)
+- Domain pointed to the server IP (A-записи для `tee.su` и `www.tee.su`)
+- Ports 80 and 443 open in firewall
+
+### First deploy
+
+```bash
+# 1. Install Docker (if not installed)
+curl -fsSL https://get.docker.com | sh
+
+# 2. Clone the repository
+git clone <repo-url>
+cd tee-su
+
+# 3. Configure environment
+cp backend/.env.example backend/.env
+nano backend/.env  # fill in real values
+
+# 4. Deploy (HTTP first)
+bash deploy.sh
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://tee.su |
+| Admin Panel | http://tee.su/admin |
+
+### Subsequent deploys
+
+```bash
+bash deploy.sh
+```
+
+The script pulls the latest code, rebuilds images, restarts containers, and cleans up old images.
+
+### SSL (HTTPS)
+
+> Run this **once**, after the domain is already pointed to the server and the site works over HTTP.
+
+```bash
+# 1. Install certbot on the server
+apt install -y certbot
+
+# 2. Run SSL init script (stops nginx briefly, gets cert, restarts with HTTPS)
+bash ssl-init.sh
+```
+
+The script will:
+1. Stop nginx to free port 80
+2. Obtain a Let's Encrypt certificate via certbot standalone
+3. Replace `nginx/nginx.conf` with the SSL version
+4. Restart nginx on ports 80 + 443
+
+After that, HTTP automatically redirects to HTTPS.
+
+**Auto-renewal** — add to crontab (`crontab -e`):
+
+```bash
+0 3 * * * certbot renew --quiet && docker compose -f /root/tee-su/docker-compose.prod.yml restart nginx
+```
+
+### Useful commands
+
+```bash
+# View logs
+docker compose -f docker-compose.prod.yml logs -f
+
+# View logs for a specific service
+docker compose -f docker-compose.prod.yml logs -f backend
+
+# Restart a specific service
+docker compose -f docker-compose.prod.yml restart backend
+
+# Stop everything
+docker compose -f docker-compose.prod.yml down
+
+# Check disk usage
+docker system df
+```
