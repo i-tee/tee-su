@@ -25,16 +25,17 @@
     margin-bottom: 48px;
 }
 
-/* Grid — на десктопе только одна колонка (текст), фото скрыто */
+/* Grid — на десктопе две колонки: фото + текст */
 .grid {
     display: grid;
-    grid-template-columns: 1fr;
-    max-width: 800px;
+    grid-template-columns: 360px 1fr;
+    gap: 80px;
+    align-items: start;
 }
 
-/* ── Фото (скрыто на десктопе, показывается только на мобильном) ── */
+/* ── Фото — всегда видно ── */
 .photoWrap {
-    display: none; /* скрыто по умолчанию */
+    display: block;
     position: relative;
     border-radius: 16px;
     overflow: hidden;
@@ -181,7 +182,6 @@
     line-height: 1.5;
 }
 
-/* ── Mobile — фото показывается только здесь ── */
 @media (max-width: 900px) {
     .section {
         padding: 64px 24px;
@@ -189,10 +189,6 @@
 
     .grid {
         grid-template-columns: 1fr;
-        max-width: 100%;
-    }
-
-    .photoWrap {
-        display: block; /* показываем на мобильном */
+        gap: 32px;
     }
 }

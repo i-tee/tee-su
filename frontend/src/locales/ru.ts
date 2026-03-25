@@ -21,12 +21,12 @@ export const ru = {
     terminal_prompt: '~/карьера $',
     cta_primary: '→ Написать мне',
     cta_secondary: 'Смотреть стек',
-    avatar_role: '// fullstack · backend · ai',
+    avatar_role: '// fullstack · frontend · backend · ai',
     typewriter: [
       'Fullstack Dev · 16 лет опыта',
-      'Backend в первую очередь',
-      'NestJS + PHP + TypeScript',
-      'Создаю AI-агентов',
+      'PHP · Laravel · Vue.js',
+      'Frontend и Backend — под ключ',
+      'Разрабатываю AI-агентов',
       'Москва, Россия 🇷🇺',
     ],
     stats: {
@@ -44,36 +44,36 @@ export const ru = {
     section_title_line1: 'Мой рабочий',
     section_title_line2: 'арсенал',
     section_desc:
-      '16 лет хардкора: от чистого PHP до NestJS-микросервисов, AI-агентов и всего, что между ними.',
+      '16 лет по всему стеку — PHP и Vue на фронте и бэке, NestJS-микросервисы, AI-агенты и всё что между ними.',
     terminal_title: 'itee@dev ~ whoami',
     terminal_cmd: 'cat ./package.json',
     terminal_json: {
       name: 'eugene-tarasov',
       role: 'fullstack-dev',
-      focus: 'backend-first',
+      focus: 'end-to-end',
       experience: '16лет',
-      stack: ['NestJS', 'PHP', 'TypeScript', 'AI'] as string[],
+      stack: ['PHP', 'Laravel', 'Vue', 'AI'] as string[],
       location: 'Москва, RU',
       status: 'доступен',
     },
     cards: [
       {
-        cat: 'backend · активный',
+        cat: 'основной стек',
         name: 'PHP & Laravel',
         tags: ['PHP 8', 'Laravel', 'Joomla', 'OpenCart', 'MODX'],
         tags_green: [] as string[],
       },
       {
-        cat: 'backend · новый стек',
-        name: 'Node.js & Python',
-        tags_green: ['NestJS', 'FastAPI', 'TypeScript'],
-        tags: ['REST', 'GraphQL'],
+        cat: 'frontend · основной',
+        name: 'Vue & React',
+        tags_green: ['Vue.js', 'Next.js'],
+        tags: ['HTML5', 'CSS/Sass', 'TypeScript'],
       },
       {
-        cat: 'frontend',
-        name: 'Vue & React',
-        tags: ['Vue.js', 'HTML5', 'CSS/Sass'],
-        tags_green: ['Next.js'],
+        cat: 'расширенный стек',
+        name: 'Node.js & Python',
+        tags_green: ['NestJS', 'FastAPI'],
+        tags: ['REST', 'GraphQL', 'TypeScript'],
       },
       {
         cat: 'AI и агенты',
@@ -100,16 +100,16 @@ export const ru = {
         tags_green: ['Traefik'],
       },
     ],
-    skills_header_1: '// Уровень владения',
-    skills_header_2: '// В активном освоении',
+    skills_header_1: '// Основной стек',
+    skills_header_2: '// Также в работе',
     skills: [
       { name: 'PHP / Laravel', pct: 95 },
-      { name: 'NestJS / Node.js', pct: 80 },
+      { name: 'Vue.js / Frontend', pct: 88 },
       { name: 'SQL / Базы данных', pct: 88 },
       { name: 'Docker / DevOps', pct: 75 },
     ],
     skills_emerging: [
-      { name: 'AI-агенты', pct: 72 },
+      { name: 'NestJS / Node.js', pct: 80 },
       { name: 'TypeScript', pct: 82 },
       { name: 'React / Next.js', pct: 68 },
       { name: 'Python / FastAPI', pct: 65 },
@@ -118,22 +118,22 @@ export const ru = {
 
   agent: {
     section_tag: 'ai.agent',
-    section_title_line1: 'Собственный',
-    section_title_line2: 'AI-агент',
+    section_title_line1: 'Работа с',
+    section_title_line2: 'AI и агентами',
     description:
-      'Разработал и запустил персонального AI-агента на базе современных языковых моделей. Агент живёт на платформе Moltbook — социальной сети для AI-агентов — и работает автономно от моего имени.',
+      'Делаю AI-продукты под конкретные задачи — персональные ассистенты, корпоративные чат-боты, консультанты в узких нишах. Каждый агент обучается на нужной базе знаний, дообучается под бизнес и встраивается в нужные каналы.',
     features: [
-      'Построен на Claude API + движок OpenClaw',
-      'Интегрирован с Moltbot и AI-API',
-      'Отвечает на вопросы о разработке и архитектуре',
-      'Публичный профиль на moltbook.com',
-      'Работает полностью автономно, 24/7',
+      'Персональные и корпоративные AI-агенты и чат-ассистенты',
+      'Боты под нишу — поддержка, консалтинг, онбординг',
+      'Дообучение на собственных данных под конкретный бизнес',
+      'Работаю с OpenAI, Anthropic, open-source и другими LLM API',
+      'Интеграция через LangChain, кастомные пайплайны и другие инструменты',
     ],
-    card_badge: 'Агент онлайн · moltbook.com',
+    card_badge: 'Онлайн · moltbook.com',
     card_name: 'itee_aibot',
     card_handle: 'u/itee_aibot · moltbook.com',
     card_desc:
-      'Персональный AI-агент Евгения Тарасова. Помогает с вопросами по разработке, консультирует по стеку и представляет владельца 24/7 на платформе Moltbook.',
+      'Мой персональный агент на Moltbook — соцсети для AI-ботов. Живёт там самостоятельно: читает ленту, переписывается с другими ботами и представляет меня на платформе.',
     card_cta: 'Открыть профиль агента →',
     card_url: 'https://www.moltbook.com/u/itee_aibot',
   },
@@ -142,10 +142,10 @@ export const ru = {
     section_tag: 'about.me',
     section_title: 'Кто я такой',
     bio_1:
-      'Fullstack-разработчик из Москвы. 16 лет создаю сайты, интернет-магазины, корпоративные порталы и нестандартные веб-решения — с нуля и до продакшена.',
+      'Fullstack-разработчик из Москвы. 16 лет создаю сайты, интернет-магазины, корпоративные порталы и нестандартные веб-решения — и фронт, и бэк, с нуля и до продакшена.',
     bio_2:
-      'Сейчас активно перехожу на современный TypeScript-стек (NestJS + Next.js), интегрирую AI-инструменты в реальные проекты и разрабатываю собственных AI-агентов на базе Claude API.',
-    bio_3: 'Backend в первую очередь. Всегда.',
+      'PHP & Laravel на сервере, Vue.js на клиенте — это мой основной стек. Там где нужно — работаю с NestJS, React и Python. И интегрирую AI в реальные проекты с тех пор, как инструменты стали достаточно зрелыми.',
+    bio_3: 'Владею обеими сторонами стека.',
     education_header: '// Образование и вехи',
     timeline: [
       {
@@ -164,7 +164,7 @@ export const ru = {
         desc: 'Web-разработчик · Продвинутый трек',
       },
       {
-        date: '2024',
+        date: '2025',
         title: 'AI-агент разработка',
         desc: 'Создал и запустил itee_aibot на Moltbook · Claude API',
       },
@@ -182,8 +182,8 @@ export const ru = {
       telegram_url: 'https://t.me/tee_su',
       github: 'GitHub',
       github_url: 'https://github.com/i-tee',
-      email: 'me@tee.su',
-      email_url: 'mailto:me@tee.su',
+      email: 'web@tee.su',
+      email_url: 'mailto:web@tee.su',
       agent: '🤖 AI-агент',
       agent_url: 'https://www.moltbook.com/u/itee_aibot',
     },
@@ -191,6 +191,6 @@ export const ru = {
 
   footer: {
     copy: '© 2026 Евгений Тарасов',
-    tagline: 'tee.su · backend в первую очередь · всегда',
+    tagline: 'tee.su · fullstack · web & AI',
   },
 }

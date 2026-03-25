@@ -236,10 +236,34 @@
 }
 
 /* ── Шкала навыков ── */
+.skillsWrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 48px;
+}
+
+.skillsCol {
+    display: flex;
+    flex-direction: column;
+}
+
+.skillsColHeader {
+    font-family: var(--font-geist-mono), monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+}
+
+/* keep old name for any remaining references */
 .skillsGrid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px 48px;
+}
+
+.skillItem {
+    margin-bottom: 20px;
 }
 
 .skillMeta {
@@ -289,5 +313,10 @@
 
     .skillsGrid {
         grid-template-columns: 1fr
+    }
+
+    .skillsWrapper {
+        grid-template-columns: 1fr;
+        gap: 0;
     }
 }
