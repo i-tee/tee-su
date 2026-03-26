@@ -6,7 +6,7 @@ COPY . .
 RUN npm run build
 # Pre-generate AdminJS components bundle during build.
 # mkdir uploads because LocalProvider checks the directory exists at init time.
-RUN mkdir -p uploads && node scripts/pre-bundle.js
+RUN node scripts/pre-bundle.js
 
 FROM node:20-alpine AS runner
 WORKDIR /app

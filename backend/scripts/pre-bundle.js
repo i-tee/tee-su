@@ -15,6 +15,7 @@ process.env.NODE_ENV = 'production';
 process.env.ADMIN_JS_SKIP_BUNDLE = 'false';
 
 const path = require('path');
+const fs = require('fs');
 const adminjs = require('adminjs');
 const AdminJS = adminjs.default;
 const { ComponentLoader } = adminjs;
@@ -24,6 +25,11 @@ const { ComponentLoader } = adminjs;
 // These calls happen inside buildFeature() in upload-file.feature.js,
 // which executes only when uploadFileFeature(config) is invoked.
 const uploadFileFeature = require('@adminjs/upload').default;
+
+// LocalProvider checks that the bucket directory exists at instantiation time.
+// Create it here so the script works both in Docker build and locally.
+const uploadsDir = path.join(process.cwd(), 'uploads');
+fs.mkdirSync(uploadsDir, { recursive: true });
 
 uploadFileFeature({
   provider: {
