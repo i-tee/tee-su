@@ -15,7 +15,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 # Copy pre-built AdminJS bundle so the server doesn't need to re-generate it
-COPY --from=builder /app/.adminjs ./.adminjs
+COPY --from=builder /app/adminjs ./adminjs
 RUN mkdir -p uploads
 EXPOSE 4000
 CMD ["node", "dist/main"]

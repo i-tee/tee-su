@@ -13,6 +13,10 @@
 // admin.initialize() also checks it to decide whether to run the bundler.
 process.env.NODE_ENV = 'production';
 process.env.ADMIN_JS_SKIP_BUNDLE = 'false';
+// Use 'adminjs' (no leading dot) so Express's send module doesn't treat it
+// as a dotfile directory and block serving. Default '.adminjs' gets 404
+// because send's dotfiles option defaults to 'ignore'.
+process.env.ADMIN_JS_TMP_DIR = 'adminjs';
 
 const path = require('path');
 const fs = require('fs');
