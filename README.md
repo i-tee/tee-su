@@ -7,6 +7,7 @@ A full-stack web application built on a modern, production-ready stack. Designed
 ## Stack
 
 ### Frontend
+
 | Technology | Version |
 |---|---|
 | [Next.js](https://nextjs.org/) | 16 |
@@ -14,6 +15,7 @@ A full-stack web application built on a modern, production-ready stack. Designed
 | TypeScript | 5 |
 
 ### Backend
+
 | Technology | Version |
 |---|---|
 | [NestJS](https://nestjs.com/) | 11 |
@@ -23,6 +25,7 @@ A full-stack web application built on a modern, production-ready stack. Designed
 | TypeScript | 5.9 |
 
 ### Infrastructure
+
 | Technology | Purpose |
 |---|---|
 | Docker + Docker Compose | Containerized development & deployment |
@@ -63,9 +66,12 @@ tee-su/
 │       └── education/
 │
 ├── nginx/
-│   └── nginx.conf         # Reverse proxy (prod)
-├── docker-compose.yml     # Development
-└── docker-compose.prod.yml # Production
+│   ├── nginx.conf         # Reverse proxy HTTP (dev/initial)
+│   └── nginx.ssl.conf     # Reverse proxy HTTPS (production)
+├── docker-compose.yml      # Development
+├── docker-compose.prod.yml # Production
+├── deploy.sh               # One-command deploy script
+└── ssl-init.sh             # One-time SSL setup script
 ```
 
 ---
@@ -76,29 +82,25 @@ tee-su/
 
 - [Docker](https://www.docker.com/) and Docker Compose
 
-### Run
+### Run locally
 
 ```bash
 git clone <repo-url>
 cd tee-su
+cp backend/.env.example backend/.env
+# fill in backend/.env
 docker compose up
 ```
 
 | Service | URL |
 |---|---|
-| Frontend | http://localhost:3000 |
-| Backend API | http://localhost:4000 |
-| Admin Panel | http://localhost:4000/admin |
+| Frontend | <http://localhost:3000> |
+| Backend API | <http://localhost:4000> |
+| Admin Panel | <http://localhost:4000/admin> |
 
 ### Environment
 
-Copy and fill in the backend environment file:
-
-```bash
-cp backend/.env.example backend/.env
-```
-
-Required variables:
+Required variables in `backend/.env`:
 
 ```env
 # Database
@@ -145,7 +147,7 @@ Base URL: `http://localhost:4000`
 |---|---|---|
 | GET | `/profile` | Get profile data |
 | GET | `/skills` | List all skills |
-| GET | `/skill-groups` | List skill groups |
+| GET | `/skill-groups` | List skill groups with skills |
 | GET | `/education` | List education entries |
 | GET | `/images` | List all images |
 | GET | `/images/:id` | Get image by ID |
@@ -159,7 +161,7 @@ The project is intentionally minimal. Common extension points:
 - **New entity** — add a module under `backend/src/`, register in `app.module.ts`, add to AdminJS resources in `admin.module.ts`
 - **Auth** — enable `ADMIN_AUTH_ENABLED=true` and set credentials in `.env`
 - **Frontend pages** — add routes under `frontend/src/app/`
-- **CI/CD** — add a `Dockerfile` for production builds alongside the existing `Dockerfile.dev`
+- **Locales** — extend `frontend/src/locales/`
 
 ---
 
@@ -167,17 +169,24 @@ The project is intentionally minimal. Common extension points:
 
 ### Server requirements
 
-- 2 CPU / 4 GB RAM / 20 GB NVMe (минимум для билда на сервере)
+- 1 CPU / 1 GB RAM minimum (2 GB RAM recommended)
+- 20 GB disk
 - Ubuntu 22.04+
 - Docker installed
-- Domain A-records pointed to the server IP (`tee.su` и `www.tee.su`)
+- Domain A-records pointed to the server IP
+
+> **Note:** On 1 GB RAM servers, add swap before deploying:
+>
+> ```bash
+> fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+> echo '/swapfile none swap sw 0 0' >> /etc/fstab
+> ```
 
 ---
 
 ### Step 1 — Prepare the server
 
 ```bash
-# Install Docker
 curl -fsSL https://get.docker.com | sh
 ```
 
@@ -186,10 +195,8 @@ curl -fsSL https://get.docker.com | sh
 ### Step 2 — Clone and configure
 
 ```bash
-git clone <repo-url>
-cd tee-su
-
-# Copy and fill in environment variables
+git clone <repo-url> /var/www/tee-su
+cd /var/www/tee-su
 cp backend/.env.example backend/.env
 nano backend/.env
 ```
@@ -202,12 +209,12 @@ nano backend/.env
 bash deploy.sh
 ```
 
-Verify the site is working over HTTP before proceeding:
+Verify the site is working over HTTP:
 
 | Service | URL |
 |---|---|
-| Frontend | http://tee.su |
-| Admin Panel | http://tee.su/admin |
+| Frontend | <http://yourdomain.com> |
+| Admin Panel | <http://yourdomain.com/admin> |
 
 ---
 
@@ -216,28 +223,26 @@ Verify the site is working over HTTP before proceeding:
 > Run once, after the site is accessible over HTTP.
 
 ```bash
-# Install certbot
 apt install -y certbot
-
-# Get certificate and switch nginx to HTTPS
 bash ssl-init.sh
 ```
 
 The script:
+
 1. Stops nginx temporarily to free port 80
-2. Obtains a Let's Encrypt certificate
+2. Obtains a Let's Encrypt certificate for your domain
 3. Switches nginx config to the SSL version (`nginx/nginx.ssl.conf`)
-4. Restarts nginx on ports 80 + 443 — HTTP redirects to HTTPS automatically
+4. Restarts nginx — HTTP redirects to HTTPS automatically
 
 ---
 
-### Step 5 — Set up SSL auto-renewal
+### Step 5 — SSL auto-renewal
 
 ```bash
 crontab -e
 ```
 
-Add at the end:
+Add:
 
 ```
 0 3 * * * certbot renew --quiet && docker compose -f /var/www/tee-su/docker-compose.prod.yml restart nginx
@@ -247,13 +252,11 @@ Add at the end:
 
 ### Subsequent deploys
 
-Every time you push new code, just run on the server:
-
 ```bash
 bash deploy.sh
 ```
 
-The script pulls latest code, rebuilds images, restarts containers, and removes old images.
+Pulls latest code, rebuilds images, restarts containers, removes old images.
 
 ---
 
@@ -272,6 +275,51 @@ docker compose -f docker-compose.prod.yml restart backend
 # Stop everything
 docker compose -f docker-compose.prod.yml down
 
-# Check disk usage
+# Check disk and image usage
 docker system df
 ```
+
+---
+
+## Known Issues & Solutions
+
+### AdminJS components.bundle.js — 404 in production
+
+**Problem:** In production Docker, AdminJS shows `Component "ComponentX" has not been bundled` error. The bundle file exists at runtime but Express returns 404.
+
+**Root cause:** Two issues combined:
+
+1. Express `send` module ignores dotfile directories by default — returns 404 for any path containing a component starting with `.`. The default AdminJS tmp dir `.adminjs` triggered this.
+2. `@adminjs/upload` registers components via `AdminJS.bundle()` only when `uploadFeature()` is called — not at import time, causing a race condition with `initializeAdmin()`.
+
+**Solution:**
+
+- Pre-generate the bundle during Docker build via `backend/scripts/pre-bundle.js`
+- Set `ADMIN_JS_TMP_DIR=adminjs` (no leading dot) to bypass Express dotfile restriction
+- Set `ADMIN_JS_SKIP_BUNDLE=true` to prevent runtime re-bundling
+
+See: `backend/scripts/pre-bundle.js`, `backend/Dockerfile`, `docker-compose.prod.yml`
+
+---
+
+### Next.js Image Optimization — 400 Bad Request for external URLs
+
+**Problem:** `/_next/image?url=https://...` returns 400 in production.
+
+**Root cause:** `next.config.ts` was not copied to the runner stage in the frontend Dockerfile.
+
+**Solution:** Added `COPY --from=builder /app/next.config.ts ./next.config.ts` to the runner stage in `frontend/Dockerfile`.
+
+---
+
+### Docker build OOM on 1 GB RAM
+
+**Problem:** `nest build` crashes with `JavaScript heap out of memory` during Docker build.
+
+**Solution:**
+
+- Add 2 GB swap (see server requirements above)
+- Switch NestJS compiler to SWC: set `"builder": "swc"` in `nest-cli.json`
+- Install SWC: `npm install --save-dev @swc/cli @swc/core`
+
+SWC is a Rust-based TypeScript compiler — 20x faster than `tsc` and uses ~10x less memory.
