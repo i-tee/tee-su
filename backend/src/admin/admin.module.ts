@@ -11,6 +11,7 @@ import uploadFeature from '@adminjs/upload';
 import { buildFeature, ActionResponse } from 'adminjs';
 import { ImagesModule } from '../images/images.module';
 import { S3UploadService } from '../images/s3-upload.service';
+import { ComponentLoader } from 'adminjs';
 
 @Module({
   imports: [
@@ -62,9 +63,12 @@ import { S3UploadService } from '../images/s3-upload.service';
           },
         });
 
+        const componentLoader = new ComponentLoader();
+
         return {
           adminJsOptions: {
             rootPath: '/admin',
+            componentLoader,
             resources: [
               {
                 resource: Profile,
