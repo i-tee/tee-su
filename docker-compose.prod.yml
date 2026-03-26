@@ -35,6 +35,7 @@ services:
     environment:
       - TMPDIR=/app/uploads
       - NODE_ENV=production
+      - ADMIN_JS_SKIP_BUNDLE=true
     depends_on:
       - db
     restart: unless-stopped
