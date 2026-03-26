@@ -34,6 +34,7 @@ services:
       - ./backend/.env
     environment:
       - TMPDIR=/app/uploads
+      - NODE_ENV=production
     depends_on:
       - db
     restart: unless-stopped
