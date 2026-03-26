@@ -5,8 +5,8 @@ RUN npm ci
 COPY . .
 RUN npm run build
 # Pre-generate AdminJS components bundle during build.
-# This avoids runtime rollup bundling and ensures upload components are included.
-RUN node scripts/pre-bundle.js
+# mkdir uploads because LocalProvider checks the directory exists at init time.
+RUN mkdir -p uploads && node scripts/pre-bundle.js
 
 FROM node:20-alpine AS runner
 WORKDIR /app
