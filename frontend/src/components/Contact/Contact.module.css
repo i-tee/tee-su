@@ -72,7 +72,7 @@
     border-color: var(--accent);
     color: var(--accent2);
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(124, 106, 247, .2);
+    box-shadow: 0 8px 24px rgba(201, 149, 107, .2);
 }
 
 .link svg {

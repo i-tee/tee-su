@@ -107,7 +107,7 @@ function Particles({ theme }: { theme: Theme }) {
       const W = canvas!.width,
         H = canvas!.height
       ctx.clearRect(0, 0, W, H)
-      const c = theme === 'dark' ? '124,106,247' : '108,92,231'
+      const c = theme === 'dark' ? '201,149,107' : '139,101,67'
       pts.forEach((p) => {
         p.x += p.vx
         p.y += p.vy

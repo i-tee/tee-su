@@ -94,7 +94,7 @@ function Particles() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       const dark =
         document.documentElement.getAttribute('data-theme') !== 'light'
-      const c = dark ? '124,106,247' : '108,92,231'
+      const c = dark ? '201,149,107' : '139,101,67'
 
       pts.forEach((p) => {
         p.x += p.vx

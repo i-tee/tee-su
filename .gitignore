@@ -6,3 +6,6 @@ node_modules/
 dist/
 .next/
 uploads/
+tmp/
+frontend/tmp/
+backend/tmp/

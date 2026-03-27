@@ -35,44 +35,52 @@ button {
 
 /* ─── Тёмная тема ─────────────────────────────── */
 [data-theme='dark'] {
-  --bg: #070710;
-  --bg2: #0c0c18;
-  --bg3: #111120;
-  --border: #1a1a2e;
-  --border2: #22223a;
+  --bg:      #1a1612;
+  --bg2:     #211d18;
+  --bg3:     #2a2520;
+  --bg4:     #332d27;
+  --border:  #3d3630;
+  --border2: #4a423a;
 
-  --accent: #7c6af7;
-  --accent2: #a78bfa;
-  --accent3: #c4b5fd;
+  --accent:  #c9956b;
+  --accent2: #daa87c;
+  --accent3: #e8c4a0;
 
-  --text: #e8e8f4;
-  --muted: #5a5a78;
-  --muted2: #8080a0;
+  --green: #8fbc8f;
+  --red:   #c97b6b;
 
-  --green: #34d399;
-  --green2: #6ee7b7;
-  --yellow: #fbbf24;
+  --text:   #ede6de;
+  --text2:  #d4ccc3;
+  --muted:  #8a8077;
+  --muted2: #a69d94;
 }
 
 /* ─── Светлая тема ────────────────────────────── */
 [data-theme='light'] {
-  --bg: #f4f4fa;
-  --bg2: #ffffff;
-  --bg3: #eeeef8;
-  --border: #d8d8ee;
-  --border2: #c8c8e4;
+  --bg:      #f5f0ea;
+  --bg2:     #efe9e2;
+  --bg3:     #e8e1d8;
+  --bg4:     #ddd5cb;
+  --border:  #d0c7bc;
+  --border2: #c4bab0;
 
-  --accent: #6c5ce7;
-  --accent2: #8b7cf8;
-  --accent3: #a78bfa;
+  --accent:  #8b6543;
+  --accent2: #7a5738;
+  --accent3: #6b4a30;
 
-  --text: #12122a;
-  --muted: #8080a8;
-  --muted2: #6060a0;
+  --green: #5a8a5a;
+  --red:   #a85a4a;
 
-  --green: #059669;
-  --green2: #10b981;
-  --yellow: #d97706;
+  --text:   #2a2420;
+  --text2:  #3d3630;
+  --muted:  #7a7068;
+  --muted2: #685e56;
+}
+
+/* ─── Заголовки — DM Serif Display ────────────── */
+h1, h2,
+.section-title {
+  font-family: var(--font-dm-serif), 'DM Serif Display', serif;
 }
 
 /* ─── Анимации появления при скролле ──────────── */

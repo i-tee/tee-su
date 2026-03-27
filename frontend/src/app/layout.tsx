@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist, Geist_Mono, DM_Serif_Display } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { LocaleProvider } from '@/context/LocaleContext'
 import type { Locale } from '@/locales'
@@ -13,6 +13,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+})
+
+const dmSerifDisplay = DM_Serif_Display({
+  variable: '--font-dm-serif',
+  subsets: ['latin'],
+  weight: '400',
 })
 
 export const metadata: Metadata = {
@@ -50,7 +56,7 @@ export default async function RootLayout({
         {/* Антифлеш скрипт — применяет тему до первого рендера */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${dmSerifDisplay.variable}`}>
         {/* LocaleProvider даёт доступ к переводам через useLocale() */}
         <LocaleProvider initialLocale={initialLocale}>{children}</LocaleProvider>
       </body>
