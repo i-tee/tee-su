@@ -7,6 +7,7 @@ import { SkillsModule } from './skills/skills.module';
 import { SkillGroupsModule } from './skill-groups/skill-groups.module';
 import { EducationModule } from './education/education.module';
 import { ImagesModule } from './images/images.module';
+import { SeoMetaModule } from './seo-meta/seo-meta.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ImagesModule } from './images/images.module';
     SkillGroupsModule,
     EducationModule,
     ImagesModule,
+    SeoMetaModule,
   ],
 })
 export class AppModule {}

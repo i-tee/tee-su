@@ -12,6 +12,7 @@ import { buildFeature, ActionResponse } from 'adminjs';
 import { ImagesModule } from '../images/images.module';
 import { S3UploadService } from '../images/s3-upload.service';
 import { ComponentLoader } from 'adminjs';
+import { SeoMeta } from '../seo-meta/seo-meta.entity';
 
 @Module({
   imports: [
@@ -90,6 +91,70 @@ import { ComponentLoader } from 'adminjs';
               {
                 resource: Education,
                 options: { navigation: { name: menuName } },
+              },
+              {
+                resource: SeoMeta,
+                options: {
+                  navigation: { name: 'SEO', icon: 'Search' },
+                  properties: {
+                    id: {
+                      isVisible: {
+                        list: false,
+                        edit: false,
+                        show: true,
+                        filter: false,
+                      },
+                    },
+                    personSameAs: {
+                      type: 'textarea',
+                      description:
+                        'JSON-массив URL. Пример: ["https://github.com/i-tee"]',
+                    },
+                    robots: {
+                      availableValues: [
+                        {
+                          value: 'index, follow',
+                          label: 'index, follow (по умолчанию)',
+                        },
+                        { value: 'noindex, follow', label: 'noindex, follow' },
+                        {
+                          value: 'noindex, nofollow',
+                          label: 'noindex, nofollow',
+                        },
+                      ],
+                    },
+                    ogType: {
+                      availableValues: [
+                        { value: 'website', label: 'website' },
+                        { value: 'profile', label: 'profile' },
+                      ],
+                    },
+                    twitterCard: {
+                      availableValues: [
+                        { value: 'summary', label: 'summary' },
+                        {
+                          value: 'summary_large_image',
+                          label: 'summary_large_image (рекомендуется)',
+                        },
+                      ],
+                    },
+                    ogLocale: {
+                      availableValues: [
+                        { value: 'en_US', label: 'en_US' },
+                        { value: 'ru_RU', label: 'ru_RU' },
+                      ],
+                    },
+                    description: { type: 'textarea' },
+                    ogDescription: { type: 'textarea' },
+                    keywords: { type: 'textarea' },
+                  },
+                  actions: {
+                    // Запрещаем создавать новые записи и удалять — singleton
+                    new: { isAccessible: false },
+                    delete: { isAccessible: false },
+                    bulkDelete: { isAccessible: false },
+                  },
+                },
               },
               {
                 resource: Image,
