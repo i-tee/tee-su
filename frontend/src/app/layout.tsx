@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, DM_Serif_Display } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { LocaleProvider } from '@/context/LocaleContext'
 import type { Locale } from '@/locales'
+import { buildMetadata } from './metadata'
 import './globals.css'
 
 const geistSans = Geist({
@@ -21,9 +22,8 @@ const dmSerifDisplay = DM_Serif_Display({
   weight: '400',
 })
 
-export const metadata: Metadata = {
-  title: 'Eugene Tarasov — Fullstack Developer',
-  description: 'Fullstack developer, 16 years experience, backend-first.',
+export async function generateMetadata(): Promise<Metadata> {
+  return buildMetadata()
 }
 
 // Этот скрипт запускается ДО React — читает cookie и сразу
@@ -56,9 +56,13 @@ export default async function RootLayout({
         {/* Антифлеш скрипт — применяет тему до первого рендера */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${dmSerifDisplay.variable}`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${dmSerifDisplay.variable}`}
+      >
         {/* LocaleProvider даёт доступ к переводам через useLocale() */}
-        <LocaleProvider initialLocale={initialLocale}>{children}</LocaleProvider>
+        <LocaleProvider initialLocale={initialLocale}>
+          {children}
+        </LocaleProvider>
       </body>
     </html>
   )

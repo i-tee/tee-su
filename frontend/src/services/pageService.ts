@@ -54,6 +54,29 @@ export interface ApiProfile {
   statsBots: number
 }
 
+export interface ApiSeoMeta {
+  title: string
+  description: string
+  keywords: string
+  author: string
+  canonical: string
+  ogTitle: string
+  ogDescription: string
+  ogImage: string
+  ogImageAlt: string
+  ogType: string
+  ogLocale: string
+  ogSiteName: string
+  twitterCard: string
+  twitterTitle: string
+  twitterDescription: string
+  twitterSite: string
+  twitterCreator: string
+  robots: string
+  themeColor: string
+  locale: string
+}
+
 // ─── Запросы ─────────────────────────────────────────────
 
 export async function getImages(): Promise<ApiImage[]> {
@@ -95,6 +118,18 @@ export async function getEducation(): Promise<ApiEducation[]> {
 export async function getProfile(): Promise<ApiProfile | null> {
   try {
     const res = await fetch(`${API_URL}/profile`, {
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function getSeoMeta(): Promise<ApiSeoMeta | null> {
+  try {
+    const res = await fetch(`${API_URL}/seo-meta`, {
       next: { revalidate: 3600 },
     })
     if (!res.ok) return null
