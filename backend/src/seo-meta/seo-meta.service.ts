@@ -20,25 +20,25 @@ export class SeoMetaService implements OnModuleInit {
     if (count === 0) {
       await this.repo.save(
         this.repo.create({
-          title: 'Evgeniy Tarasov — Fullstack Developer',
+          title: 'Eugene Tarasov — Fullstack Developer',
           titleTemplate: '%s | tee.su',
           description:
             'Fullstack developer with 16+ years of experience. PHP, Laravel, NestJS, Vue.js, React, Docker. Available for new projects.',
           keywords:
             'fullstack developer, php, laravel, nestjs, vue, react, docker, typescript',
           canonical: 'https://tee.su',
-          author: 'Evgeniy Tarasov',
+          author: 'Eugene Tarasov',
           ogTitle: '',
           ogDescription: '',
           ogImage: 'https://tee.su/og-image.jpg',
-          ogImageAlt: 'Evgeniy Tarasov — Fullstack Developer',
+          ogImageAlt: 'Eugene Tarasov — Fullstack Developer',
           ogType: 'website',
           ogLocale: 'en_US',
           ogSiteName: 'tee.su',
           twitterCard: 'summary_large_image',
           twitterSite: 'tee_su',
           twitterCreator: 'tee_su',
-          personName: 'Evgeniy Tarasov',
+          personName: 'Eugene Tarasov',
           personJobTitle: 'Fullstack Developer',
           personUrl: 'https://tee.su',
           personImage: 'https://tee.su/i2026b.jpg',

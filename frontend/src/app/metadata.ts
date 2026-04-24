@@ -25,10 +25,11 @@ export async function buildMetadata(): Promise<Metadata> {
 
     icons: {
       icon: [
+        { url: '/favicon.svg', type: 'image/svg+xml' },
+        { url: '/favicon-96x96.png', type: 'image/png', sizes: '96x96' },
         { url: '/favicon.ico', sizes: 'any' },
-        { url: '/icon.png', type: 'image/png', sizes: '32x32' },
       ],
-      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+      apple: [{ url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' }],
       shortcut: '/favicon.ico',
     },
 

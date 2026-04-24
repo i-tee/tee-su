@@ -7,7 +7,7 @@ export class SeoMeta extends BaseEntity {
 
   // ── Базовые ────────────────────────────────────────────────────────────────
 
-  @Column({ default: 'Evgeniy Tarasov — Fullstack Developer' })
+  @Column({ default: 'Eugene Tarasov — Fullstack Developer' })
   title: string;
 
   /** Шаблон для внутренних страниц: %s заменяется на заголовок страницы */
