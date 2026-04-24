@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { LocaleProvider } from '@/context/LocaleContext'
 import type { Locale } from '@/locales'
 import { buildMetadata } from './metadata'
+import { getSeoMeta } from '@/services/pageService'
 import './globals.css'
 
 const geistSans = Geist({
@@ -50,11 +51,33 @@ export default async function RootLayout({
   const initialLocale: Locale =
     localeCookie === 'en' || localeCookie === 'ru' ? localeCookie : 'en'
 
+  const seo = await getSeoMeta()
+
+  const jsonLd = seo?.personName
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: seo.personName,
+        jobTitle: seo.personJobTitle,
+        url: seo.personUrl || seo.canonical,
+        image: seo.personImage,
+        description: seo.description,
+        sameAs: seo.personSameAs ?? [],
+      }
+    : null
+
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning>
+    <html lang={seo?.locale ?? 'en'} data-theme="dark" suppressHydrationWarning>
       <head>
         {/* Антифлеш скрипт — применяет тему до первого рендера */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <meta name="theme-color" content={seo?.themeColor ?? '#1a1612'} />
+        {jsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        )}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${dmSerifDisplay.variable}`}

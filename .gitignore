@@ -1,6 +1,9 @@
 .vscode/
 node_modules/
 .env
+.cloude
+.claude
+.claud
 .env.local
 .env.production
 dist/

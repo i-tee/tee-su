@@ -56,6 +56,7 @@ export interface ApiProfile {
 
 export interface ApiSeoMeta {
   title: string
+  titleTemplate: string
   description: string
   keywords: string
   author: string
@@ -72,6 +73,11 @@ export interface ApiSeoMeta {
   twitterDescription: string
   twitterSite: string
   twitterCreator: string
+  personName: string
+  personJobTitle: string
+  personUrl: string
+  personImage: string
+  personSameAs: string[]
   robots: string
   themeColor: string
   locale: string
