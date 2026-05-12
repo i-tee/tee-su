@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useLocale } from '@/context/LocaleContext'
 import type { Locale } from '@/locales'
 import styles from './Nav.module.css'
+import LogoDecoder from './LogoDecoder'
 
 export type Theme = 'dark' | 'light'
 
@@ -44,9 +45,7 @@ export default function Nav({
 
   return (
     <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''}`}>
-      <a className={styles.logo} href="#">
-        {t.nav.logo}
-      </a>
+      <LogoDecoder />
 
       <div className={styles.right}>
         <div className={styles.links}>

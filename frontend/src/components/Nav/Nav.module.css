@@ -23,36 +23,6 @@
     background: rgba(245, 240, 234, 0.88);
 }
 
-/* Логотип */
-.logo {
-    font-family: var(--font-geist-mono), monospace;
-    font-size: 13px;
-    color: var(--accent2);
-    letter-spacing: 0.12em;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.logo::before {
-    content: '>';
-    color: var(--green);
-    animation: blink 1.2s step-end infinite;
-}
-
-@keyframes blink {
-
-    0%,
-    100% {
-        opacity: 1
-    }
-
-    50% {
-        opacity: 0
-    }
-}
-
 /* Правая часть */
 .right {
     display: flex;
