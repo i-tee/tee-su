@@ -53,16 +53,41 @@ export default async function RootLayout({
 
   const seo = await getSeoMeta()
 
+  // Разделяем sameAs: email уходит в поле email, остальное — в sameAs
+  const allSameAs = seo?.personSameAs ?? []
+  const emailEntry = allSameAs.find((s) => s.startsWith('mailto:'))
+  const email = emailEntry ? emailEntry.replace('mailto:', '') : undefined
+  const sameAs = allSameAs.filter((s) => !s.startsWith('mailto:'))
+
+  const personUrl = seo?.personUrl || seo?.canonical
+
   const jsonLd = seo?.personName
     ? {
         '@context': 'https://schema.org',
         '@type': 'Person',
+
         name: seo.personName,
         jobTitle: seo.personJobTitle,
-        url: seo.personUrl || seo.canonical,
-        image: seo.personImage,
         description: seo.description,
-        sameAs: seo.personSameAs ?? [],
+        url: personUrl,
+        email,
+
+        // Главная страница персоны
+        mainEntityOfPage: {
+          '@type': 'WebPage',
+          '@id': personUrl,
+        },
+
+        // ImageObject — так требуют Яндекс и Google для индексации фото
+        ...(seo.personImage && {
+          image: {
+            '@type': 'ImageObject',
+            url: seo.personImage,
+            contentUrl: seo.personImage, // ← ключевое для Яндекса
+          },
+        }),
+
+        sameAs,
       }
     : null
 
