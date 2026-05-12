@@ -115,6 +115,9 @@ export class SeoMetaService implements OnModuleInit {
       robots: meta.robots,
       themeColor: meta.themeColor,
       locale: meta.locale,
+
+      // Аналитика
+      yandexMetrikaId: meta.yandexMetrikaId || '',
     };
   }
 }

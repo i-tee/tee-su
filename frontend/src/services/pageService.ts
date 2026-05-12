@@ -81,6 +81,7 @@ export interface ApiSeoMeta {
   robots: string
   themeColor: string
   locale: string
+  yandexMetrikaId: string
 }
 
 // ─── Запросы ─────────────────────────────────────────────

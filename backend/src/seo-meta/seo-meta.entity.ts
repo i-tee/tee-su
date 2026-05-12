@@ -110,4 +110,10 @@ export class SeoMeta extends BaseEntity {
   /** Основной язык сайта: ru | en */
   @Column({ default: 'ru' })
   locale: string;
+
+  // ── Аналитика ──────────────────────────────────────────────────────────────
+
+  /** ID счётчика Яндекс.Метрики. Пусто = метрика отключена. */
+  @Column({ default: '' })
+  yandexMetrikaId: string;
 }

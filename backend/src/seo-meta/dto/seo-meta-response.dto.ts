@@ -36,4 +36,7 @@ export class SeoMetaResponseDto {
   robots: string;
   themeColor: string;
   locale: string;
+
+  // Аналитика
+  yandexMetrikaId: string;
 }
