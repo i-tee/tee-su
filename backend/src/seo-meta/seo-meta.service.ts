@@ -118,6 +118,7 @@ export class SeoMetaService implements OnModuleInit {
 
       // Аналитика
       yandexMetrikaId: meta.yandexMetrikaId || '',
+      googleAnalyticsId: meta.googleAnalyticsId || '',
     };
   }
 }

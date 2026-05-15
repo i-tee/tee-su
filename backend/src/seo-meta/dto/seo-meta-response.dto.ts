@@ -39,4 +39,5 @@ export class SeoMetaResponseDto {
 
   // Аналитика
   yandexMetrikaId: string;
+  googleAnalyticsId: string;
 }

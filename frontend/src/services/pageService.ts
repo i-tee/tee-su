@@ -82,6 +82,7 @@ export interface ApiSeoMeta {
   themeColor: string
   locale: string
   yandexMetrikaId: string
+  googleAnalyticsId: string
 }
 
 // ─── Запросы ─────────────────────────────────────────────

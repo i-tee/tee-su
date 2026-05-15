@@ -116,4 +116,8 @@ export class SeoMeta extends BaseEntity {
   /** ID счётчика Яндекс.Метрики. Пусто = метрика отключена. */
   @Column({ default: '' })
   yandexMetrikaId: string;
+
+  /** ID Google Analytics (например: G-XXXXXXXXXX). Пусто = отключено. */
+  @Column({ default: '' })
+  googleAnalyticsId: string;
 }

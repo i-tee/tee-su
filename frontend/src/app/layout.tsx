@@ -6,6 +6,7 @@ import type { Locale } from '@/locales'
 import { buildMetadata } from './metadata'
 import { getSeoMeta } from '@/services/pageService'
 import YandexMetrika from '@/components/Analytics/YandexMetrika'
+import GoogleAnalytics from '@/components/Analytics/GoogleAnalytics'
 import './globals.css'
 
 const geistSans = Geist({
@@ -113,8 +114,9 @@ export default async function RootLayout({
           {children}
         </LocaleProvider>
 
-        {/* Яндекс.Метрика — рендерится только если в БД задан ID */}
+        {/* Аналитика — рендерится только если в БД заданы ID */}
         <YandexMetrika id={seo?.yandexMetrikaId} />
+        <GoogleAnalytics id={seo?.googleAnalyticsId} />
       </body>
     </html>
   )
