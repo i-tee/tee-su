@@ -137,6 +137,9 @@ export async function getProfile(): Promise<ApiProfile | null> {
 
 export async function getSeoMeta(): Promise<ApiSeoMeta | null> {
   try {
+    // SEO-данные меняются редко — кеш на 1 час.
+    // Чтобы изменения подхватились раньше — пересоздаём фронтенд
+    // через `--force-recreate` (см. deploy.sh).
     const res = await fetch(`${API_URL}/seo-meta`, {
       next: { revalidate: 3600 },
     })
