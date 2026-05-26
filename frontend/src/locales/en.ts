@@ -28,7 +28,7 @@ export const en = {
       'PHP · Laravel · Vue.js',
       'Frontend & Backend · end to end',
       'AI Agent Builder',
-      'Moscow, Russia 🇷🇺',
+      'Fully remote · worldwide 🌐',
     ],
     stats: {
       years_value: '16',
@@ -54,7 +54,7 @@ export const en = {
       focus: 'end-to-end',
       experience: '16yr',
       stack: ['PHP', 'Laravel', 'Vue', 'AI'] as string[],
-      location: 'Moscow, RU',
+      location: 'remote · 🌐',
       status: 'available',
     },
     cards: [
@@ -177,7 +177,7 @@ export const en = {
     section_tag: 'about.me',
     section_title: 'Who I am',
     bio_1:
-      'Fullstack developer from Moscow. 16 years building websites, e-commerce stores, corporate portals, and custom web solutions — frontend and backend, from scratch to production.',
+      'Fullstack developer working fully remote. 16 years building websites, e-commerce stores, corporate portals, and custom web solutions — frontend and backend, from scratch to production.',
     bio_2:
       "PHP & Laravel on the server, Vue.js on the client — that's my home ground. I also work with NestJS, React, and Python when the project calls for it. And I've been integrating AI into real products since the tools got good enough to matter.",
     bio_3: 'I own both sides of the stack.',

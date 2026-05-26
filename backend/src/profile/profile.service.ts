@@ -16,7 +16,7 @@ export class ProfileService implements OnModuleInit {
       await this.repo.save({
         name: 'Evgeny Tarasov',
         title: 'Fullstack WEB/AI Developer, DevOps Engineer',
-        city: 'Moscow, Russia',
+        city: 'Remote · Worldwide',
         experience: 16,
         tagline: '',
         heroText: '',
