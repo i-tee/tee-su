@@ -7,6 +7,7 @@ import { buildMetadata } from './metadata'
 import { getSeoMeta } from '@/services/pageService'
 import YandexMetrika from '@/components/Analytics/YandexMetrika'
 import GoogleAnalytics from '@/components/Analytics/GoogleAnalytics'
+import AnchorScroll from '@/components/AnchorScroll/AnchorScroll'
 import './globals.css'
 
 const geistSans = Geist({
@@ -109,6 +110,9 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${dmSerifDisplay.variable}`}
       >
+        {/* Чинит прямой переход по якорю (/#mcp) — скроллит после монтирования */}
+        <AnchorScroll />
+
         {/* LocaleProvider даёт доступ к переводам через useLocale() */}
         <LocaleProvider initialLocale={initialLocale}>
           {children}

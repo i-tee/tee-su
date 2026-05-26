@@ -96,6 +96,18 @@
     letter-spacing: 0.04em;
 }
 
+/* Первая буква — подсвечена в цвет акцента, как буквы слева */
+.firstLetter {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* Для тихой "made in" строки — буква тоже приглушена */
+.ussr .firstLetter {
+    color: var(--muted);
+    font-weight: 600;
+}
+
 /* Строка с "." — Last from USSR — тихая, почти невидимая */
 .ussr .letter {
     color: var(--muted);

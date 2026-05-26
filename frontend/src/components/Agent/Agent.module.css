@@ -2,6 +2,61 @@
     padding: 100px 60px;
     border-top: 1px solid var(--border);
     background: var(--bg2);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Плавающие Python-сниппеты — декор */
+.codeFloat {
+    position: absolute;
+    font-family: var(--font-geist-mono), monospace;
+    font-size: 12px;
+    color: var(--accent);
+    opacity: 0.16;
+    pointer-events: none;
+    white-space: pre;
+    animation: agentCodeFloat 24s ease-in-out infinite;
+    z-index: 0;
+    line-height: 1.6;
+}
+
+[data-theme='light'] .codeFloat {
+    opacity: 0.09;
+}
+
+.codeFloat:nth-child(1) {
+    top: 12%;
+    right: 3%;
+    animation-delay: 0s;
+}
+
+.codeFloat:nth-child(2) {
+    bottom: 14%;
+    left: 4%;
+    animation-delay: 8s;
+    font-size: 11px;
+}
+
+.codeFloat:nth-child(3) {
+    bottom: 30%;
+    left: 32%;
+    animation-delay: 16s;
+    font-size: 11px;
+}
+
+@keyframes agentCodeFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(-1deg);
+    }
+    50% {
+        transform: translateY(-16px) rotate(0.5deg);
+    }
+}
+
+.header,
+.grid {
+    position: relative;
+    z-index: 1;
 }
 
 /* Header */

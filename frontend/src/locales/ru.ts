@@ -25,10 +25,12 @@ export const ru = {
     avatar_role: '// fullstack · frontend · backend · ai',
     typewriter: [
       'Fullstack Dev · 16 лет опыта',
-      'PHP · Laravel · Vue.js',
+      'PHP · Laravel · Vue · Nuxt',
+      'Python · Next · Nest',
       'Frontend и Backend — под ключ',
       'Разрабатываю AI-агентов',
-      'Удалёнка · по всему миру 🌐',
+      'MCP-серверы для ИИ',
+      'Удалёнка · по всему миру',
     ],
     stats: {
       years_value: '16',
@@ -53,8 +55,8 @@ export const ru = {
       role: 'fullstack-dev',
       focus: 'end-to-end',
       experience: '16лет',
-      stack: ['PHP', 'Laravel', 'Vue', 'AI'] as string[],
-      location: 'remote · 🌐',
+      stack: ['PHP', 'Laravel', 'Vue', 'Python', 'AI', 'MCP'] as string[],
+      location: 'remote',
       status: 'доступен',
     },
     cards: [
@@ -113,7 +115,7 @@ export const ru = {
       { name: 'NestJS / Node.js', pct: 80 },
       { name: 'TypeScript', pct: 82 },
       { name: 'React / Next.js', pct: 68 },
-      { name: 'Python / FastAPI', pct: 65 },
+      { name: 'Python / MCP', pct: 85 },
     ],
   },
 
@@ -179,7 +181,7 @@ export const ru = {
     bio_1:
       'Fullstack-разработчик, работаю полностью удалённо. 16 лет создаю сайты, интернет-магазины, корпоративные порталы и нестандартные веб-решения — и фронт, и бэк, с нуля и до продакшена.',
     bio_2:
-      'PHP & Laravel на сервере, Vue.js на клиенте — это мой основной стек. Там где нужно — работаю с NestJS, React и Python. И интегрирую AI в реальные проекты с тех пор, как инструменты стали достаточно зрелыми.',
+      'PHP & Laravel на сервере, Vue.js на клиенте — это мой основной стек. NestJS, React и Next — там где нужно. Сейчас активно делаю AI-продукты и разрабатываю production-ready MCP-серверы на Python — для Claude, Cursor и enterprise-интеграций.',
     bio_3: 'Владею обеими сторонами стека.',
     education_header: '// Образование и вехи',
     timeline: [
@@ -202,6 +204,11 @@ export const ru = {
         date: '2025',
         title: 'AI-агент разработка',
         desc: 'Создал и запустил itee_aibot на Moltbook · Claude API',
+      },
+      {
+        date: '2026',
+        title: 'Разработка MCP-серверов',
+        desc: 'Production-ready MCP-серверы на Python для Claude, Cursor и enterprise',
       },
     ],
   },
@@ -226,6 +233,6 @@ export const ru = {
 
   footer: {
     copy: '© 2026 Евгений Тарасов',
-    tagline: 'tee.su · fullstack · web & AI',
+    tagline: 'tee.su · fullstack · web · AI · MCP',
   },
 }
