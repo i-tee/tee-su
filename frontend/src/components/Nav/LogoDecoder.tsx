@@ -10,7 +10,7 @@ const ROWS = [
   { letter: 't', word: 'Tarasov', ussr: false },
   { letter: 'e', word: 'Eugene', ussr: false },
   { letter: 'e', word: 'Evgenievich', ussr: false },
-  { letter: '.', word: 'Born in USSR', ussr: true },
+  { letter: '.', word: 'made in', ussr: true },
   { letter: 's', word: 'Soviet', ussr: false },
   { letter: 'u', word: 'Union', ussr: false },
 ]
@@ -132,16 +132,24 @@ export default function LogoDecoder() {
         className={`${styles.panel} ${open ? styles.open : ''}`}
         aria-hidden={!open}
       >
-        {ROWS.map((row, i) => (
-          <div
-            key={i}
-            className={`${styles.row} ${row.ussr ? styles.ussr : ''}`}
-          >
-            <span className={styles.letter}>{row.letter}</span>
-            <span className={styles.dash}>—</span>
-            <span className={styles.word}>{decoded[i] || row.word}</span>
-          </div>
-        ))}
+        {ROWS.map((row, i) => {
+          const displayed = decoded[i] || row.word
+          const first = displayed.charAt(0)
+          const rest = displayed.slice(1)
+          return (
+            <div
+              key={i}
+              className={`${styles.row} ${row.ussr ? styles.ussr : ''}`}
+            >
+              <span className={styles.letter}>{row.letter}</span>
+              <span className={styles.dash}>—</span>
+              <span className={styles.word}>
+                <strong className={styles.firstLetter}>{first}</strong>
+                {rest}
+              </span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

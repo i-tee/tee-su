@@ -25,10 +25,12 @@ export const en = {
     avatar_role: '// fullstack · frontend · backend · ai',
     typewriter: [
       'Fullstack Dev · 16yr experience',
-      'PHP · Laravel · Vue.js',
+      'PHP · Laravel · Vue · Nuxt',
+      'Python · Next · Nest',
       'Frontend & Backend · end to end',
       'AI Agent Builder',
-      'Fully remote · worldwide 🌐',
+      'MCP Servers for AI',
+      'Fully remote · worldwide',
     ],
     stats: {
       years_value: '16',
@@ -54,7 +56,7 @@ export const en = {
       focus: 'end-to-end',
       experience: '16yr',
       stack: ['PHP', 'Laravel', 'Vue', 'AI'] as string[],
-      location: 'remote · 🌐',
+      location: 'remote',
       status: 'available',
     },
     cards: [
