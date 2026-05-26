@@ -3,12 +3,43 @@
 import { useLocale } from '@/context/LocaleContext'
 import styles from './Mcp.module.css'
 
+// Декоративные Python-сниппеты — плавают слева на фоне (как codeFloat в Hero)
+const CODE_SNIPPETS = [
+  `from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("crm-server")
+
+@mcp.tool()
+def get_customer(id: int) -> dict:
+    return db.fetch_user(id)
+
+mcp.run()`,
+  `@mcp.tool()
+async def query_orders(
+    user_id: int,
+    status: str = "active",
+) -> list[Order]:
+    return await orders.find(
+        user_id=user_id, status=status
+    )`,
+  `@mcp.resource("file://{path}")
+def read_file(path: str) -> str:
+    return Path(path).read_text()`,
+]
+
 export default function Mcp() {
   const { t } = useLocale()
   const m = t.mcp
 
   return (
     <section id="mcp" className={styles.section}>
+      {/* Плавающие Python-сниппеты — декор слева */}
+      {CODE_SNIPPETS.map((code, i) => (
+        <pre key={i} className={styles.codeFloat} aria-hidden>
+          {code}
+        </pre>
+      ))}
+
       <div className={styles.header}>
         <div className={styles.tag}>{m.section_tag}</div>
         <h2 className={styles.title}>

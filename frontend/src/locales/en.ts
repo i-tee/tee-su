@@ -55,7 +55,7 @@ export const en = {
       role: 'fullstack-dev',
       focus: 'end-to-end',
       experience: '16yr',
-      stack: ['PHP', 'Laravel', 'Vue', 'AI'] as string[],
+      stack: ['PHP', 'Laravel', 'Vue', 'Python', 'AI', 'MCP'] as string[],
       location: 'remote',
       status: 'available',
     },
@@ -115,7 +115,7 @@ export const en = {
       { name: 'NestJS / Node.js', pct: 80 },
       { name: 'TypeScript', pct: 82 },
       { name: 'React / Next.js', pct: 68 },
-      { name: 'Python / FastAPI', pct: 65 },
+      { name: 'Python / MCP', pct: 85 },
     ],
   },
 
@@ -181,7 +181,7 @@ export const en = {
     bio_1:
       'Fullstack developer working fully remote. 16 years building websites, e-commerce stores, corporate portals, and custom web solutions — frontend and backend, from scratch to production.',
     bio_2:
-      "PHP & Laravel on the server, Vue.js on the client — that's my home ground. I also work with NestJS, React, and Python when the project calls for it. And I've been integrating AI into real products since the tools got good enough to matter.",
+      "PHP & Laravel on the server, Vue.js on the client — that's my home ground. NestJS, React and Next when the project calls for it. Lately I've been shipping AI products and building production-grade MCP servers in Python — for Claude, Cursor, and enterprise integrations.",
     bio_3: 'I own both sides of the stack.',
     education_header: '// Education & milestones',
     timeline: [
@@ -204,6 +204,11 @@ export const en = {
         date: '2025',
         title: 'AI Agent Development',
         desc: 'Built & launched itee_aibot on Moltbook · Claude API',
+      },
+      {
+        date: '2026',
+        title: 'MCP Server Development',
+        desc: 'Production-grade Python MCP servers for Claude, Cursor & enterprise',
       },
     ],
   },
@@ -228,6 +233,6 @@ export const en = {
 
   footer: {
     copy: '© 2026 Eugene Tarasov',
-    tagline: 'tee.su · fullstack · web & AI',
+    tagline: 'tee.su · fullstack · web · AI · MCP',
   },
 }

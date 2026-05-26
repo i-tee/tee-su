@@ -109,9 +109,16 @@ export default function LogoDecoder() {
     return () => document.removeEventListener('pointerdown', onOutside)
   }, [open])
 
-  // Клик по самому логотипу — toggle (нужно для мобильных,
-  // т.к. на десктопе hover уже срабатывает раньше)
+  // Клик по логотипу:
+  //  - На десктопе (есть hover) — пропускаем дефолтное поведение,
+  //    href="#" скроллит страницу наверх.
+  //  - На тач-устройствах (нет hover) — переключаем панель,
+  //    т.к. mouseenter на iOS срабатывает один раз, а второй тап раньше
+  //    ничего не делал.
   function handleLogoClick(e: React.MouseEvent) {
+    const isTouch = window.matchMedia('(hover: none)').matches
+    if (!isTouch) return // десктоп: даём href="#" работать → скролл наверх
+
     e.preventDefault()
     if (open) closePanel()
     else openPanel()

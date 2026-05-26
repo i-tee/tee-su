@@ -2,12 +2,68 @@
     padding: 100px 60px;
     border-top: 1px solid var(--border);
     background: var(--bg2);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Плавающие bash-сниппеты — декор */
+.codeFloat {
+    position: absolute;
+    font-family: var(--font-geist-mono), monospace;
+    font-size: 11px;
+    color: var(--accent);
+    opacity: 0.15;
+    pointer-events: none;
+    white-space: pre;
+    animation: contactCodeFloat 26s ease-in-out infinite;
+    z-index: 0;
+    line-height: 1.6;
+}
+
+[data-theme='light'] .codeFloat {
+    opacity: 0.08;
+}
+
+.codeFloat:nth-child(1) {
+    top: 18%;
+    left: 5%;
+    animation-delay: 0s;
+}
+
+.codeFloat:nth-child(2) {
+    top: 14%;
+    right: 5%;
+    animation-delay: 6s;
+}
+
+.codeFloat:nth-child(3) {
+    bottom: 12%;
+    left: 6%;
+    animation-delay: 13s;
+}
+
+.codeFloat:nth-child(4) {
+    bottom: 16%;
+    right: 4%;
+    animation-delay: 19s;
+    font-size: 10px;
+}
+
+@keyframes contactCodeFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(-0.8deg);
+    }
+    50% {
+        transform: translateY(-14px) rotate(0.3deg);
+    }
 }
 
 .inner {
     max-width: 680px;
     margin: 0 auto;
     text-align: center;
+    position: relative;
+    z-index: 1;
 }
 
 .tag {

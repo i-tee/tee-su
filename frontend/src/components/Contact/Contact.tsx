@@ -27,6 +27,22 @@ function EmailIcon() {
   )
 }
 
+// Декор: bash-команды связи — на тему "let's talk"
+const CODE_SNIPPETS = [
+  `$ curl -X POST https://t.me/tee_su
+HTTP/2 200 OK
+{"status":"ready","reply_in":"~1h"}`,
+  `$ ssh me@tee.su
+Welcome back, founder.
+Last login: today from 0.0.0.0`,
+  `$ git clone git@github.com:i-tee/your-idea.git
+Cloning into 'your-idea'...
+Resolving deltas: 100% (done)`,
+  `$ ping tee.su
+64 bytes from tee.su: time=2ms
+64 bytes from tee.su: time=1ms`,
+]
+
 export default function Contact() {
   const { t } = useLocale()
   const c = t.contact
@@ -34,6 +50,13 @@ export default function Contact() {
 
   return (
     <section id="contact" className={styles.section}>
+      {/* Плавающие bash-сниппеты — декор */}
+      {CODE_SNIPPETS.map((code, i) => (
+        <pre key={i} className={styles.codeFloat} aria-hidden>
+          {code}
+        </pre>
+      ))}
+
       <div className={styles.inner}>
         <div className={styles.tag}>{c.section_tag}</div>
         <h2 className={styles.title}>
