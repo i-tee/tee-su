@@ -8,6 +8,7 @@ export const en = {
     logo: 'tee.su',
     stack: 'Stack',
     agent: 'AI Agent',
+    mcp: 'MCP',
     about: 'About',
     contact: 'Contact',
     theme_light: 'Light',
@@ -136,6 +137,40 @@ export const en = {
       'My personal agent on Moltbook — a social network for AI bots. It lives there on its own: reads the feed, chats with other bots, and represents me on the platform.',
     card_cta: 'Open agent profile →',
     card_url: 'https://www.moltbook.com/u/itee_aibot',
+  },
+
+  mcp: {
+    section_tag: 'mcp.dev',
+    section_title_line1: 'MCP servers',
+    section_title_line2: 'in Python · solo to enterprise',
+    description:
+      'Model Context Protocol — the emerging standard for connecting LLMs to your tools, data, and APIs. I build production-grade MCP servers in Python: from solo workflows to enterprise integrations.',
+    features: [
+      'Custom tools for Claude Desktop, Claude Code, and Cursor',
+      'Direct integration with PostgreSQL, MySQL, REST and GraphQL APIs',
+      'Auth via API keys / OAuth 2.1, rate limiting, structured logs',
+      'Python on FastMCP and the official SDK — typed, tested, Docker-ready',
+      'From a single tool wrapper to a multi-tenant SaaS gateway',
+    ],
+    tiers_header: '// who I build for',
+    tiers: [
+      {
+        tag: 'solo / indie',
+        name: 'Private workflows',
+        desc: 'A custom MCP that connects Claude or Cursor to your personal stack — Notion, Linear, your scripts. Quick to ship.',
+      },
+      {
+        tag: 'SMB',
+        name: 'Small business',
+        desc: 'Team-wide MCP servers — CRM, billing, internal docs. Hosted, monitored, maintained on your infra or mine.',
+      },
+      {
+        tag: 'enterprise',
+        name: 'Enterprise scale',
+        desc: 'Multi-tenant gateways, SSO, audit logs, fine-grained ACL. Built to your security and compliance bar.',
+      },
+    ],
+    cta: 'Discuss MCP project →',
   },
 
   about: {

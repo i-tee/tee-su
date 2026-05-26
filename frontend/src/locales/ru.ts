@@ -8,6 +8,7 @@ export const ru = {
     logo: 'tee.su',
     stack: 'Стек',
     agent: 'AI-агент',
+    mcp: 'MCP',
     about: 'Обо мне',
     contact: 'Контакты',
     theme_light: 'Светлая',
@@ -136,6 +137,40 @@ export const ru = {
       'Мой персональный агент на Moltbook — соцсети для AI-ботов. Живёт там самостоятельно: читает ленту, переписывается с другими ботами и представляет меня на платформе.',
     card_cta: 'Открыть профиль агента →',
     card_url: 'https://www.moltbook.com/u/itee_aibot',
+  },
+
+  mcp: {
+    section_tag: 'mcp.dev',
+    section_title_line1: 'MCP-серверы',
+    section_title_line2: 'на Python · от solo до enterprise',
+    description:
+      'Model Context Protocol — новый стандарт для подключения LLM к вашим инструментам, данным и API. Делаю production-ready MCP-серверы на Python: от персональных задач до enterprise-интеграций.',
+    features: [
+      'Кастомные инструменты для Claude Desktop, Claude Code и Cursor',
+      'Прямая интеграция с PostgreSQL, MySQL, REST и GraphQL API',
+      'Авторизация по API-ключам / OAuth 2.1, rate-limiting, структурные логи',
+      'Python на FastMCP и официальном SDK — типизация, тесты, Docker',
+      'От одной обёртки над утилитой до multi-tenant SaaS-шлюза',
+    ],
+    tiers_header: '// для кого делаю',
+    tiers: [
+      {
+        tag: 'solo / indie',
+        name: 'Личные задачи',
+        desc: 'Кастомный MCP, подключающий Claude или Cursor к вашему стеку — Notion, Linear, скрипты. Быстро под ключ.',
+      },
+      {
+        tag: 'малый бизнес',
+        name: 'Малый бизнес',
+        desc: 'MCP-серверы для команды — CRM, биллинг, внутренние документы. Хостинг, мониторинг и поддержка.',
+      },
+      {
+        tag: 'энтерпрайз',
+        name: 'Энтерпрайз',
+        desc: 'Multi-tenant шлюзы, SSO, аудит, тонкая ACL. Под ваши требования безопасности и compliance.',
+      },
+    ],
+    cta: 'Обсудить MCP-проект →',
   },
 
   about: {
