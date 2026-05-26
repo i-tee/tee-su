@@ -51,6 +51,7 @@ export default function Nav({
         <div className={styles.links}>
           <a href="#stack">{t.nav.stack}</a>
           <a href="#agent">{t.nav.agent}</a>
+          <a href="#mcp">{t.nav.mcp}</a>
           <a href="#about">{t.nav.about}</a>
           <a href="#contact">{t.nav.contact}</a>
         </div>

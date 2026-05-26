@@ -3,6 +3,7 @@ import Nav, { type Theme } from '@/components/Nav/Nav'
 import Hero from '@/components/Hero/Hero'
 import Stack from '@/components/Stack/Stack'
 import Agent from '@/components/Agent/Agent'
+import Mcp from '@/components/Mcp/Mcp'
 import About from '@/components/About/About'
 import Contact from '@/components/Contact/Contact'
 import Footer from '@/components/Footer/Footer'
@@ -34,6 +35,7 @@ export default async function Page() {
         />
         <Stack skillGroups={skillGroups} />
         <Agent />
+        <Mcp />
         <About
           education={education}
           lightImageUrl={lightImage?.url ?? ''}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import styles from './LogoDecoder.module.css'
 
 // Символы для Matrix-скрамблинга
@@ -15,6 +15,15 @@ const ROWS = [
   { letter: 'u', word: 'Union', ussr: false },
 ]
 
+// Тайминги анимации (должны совпадать с animateRow ниже)
+const ROW_STAGGER = 100 // мс между стартом каждой строки
+const STEPS = 14
+const STEP_INTERVAL = 38
+const READ_DELAY = 2700 // сколько держим панель открытой после конца анимации (итого ~3.8с)
+
+const TOTAL_OPEN_MS =
+  ROWS.length * ROW_STAGGER + STEPS * STEP_INTERVAL + READ_DELAY
+
 function randomGlyph() {
   return GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
 }
@@ -23,6 +32,7 @@ export default function LogoDecoder() {
   const [open, setOpen] = useState(false)
   const [decoded, setDecoded] = useState<string[]>(ROWS.map(() => ''))
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
   function clearAll() {
     timers.current.forEach(clearTimeout)
@@ -31,9 +41,6 @@ export default function LogoDecoder() {
 
   function animateRow(index: number, onDone?: () => void) {
     const target = ROWS[index].word
-    const STEPS = 14
-    const INTERVAL = 38
-
     let step = 0
 
     function tick() {
@@ -50,7 +57,7 @@ export default function LogoDecoder() {
       })
 
       if (step < STEPS) {
-        const t = setTimeout(tick, INTERVAL)
+        const t = setTimeout(tick, STEP_INTERVAL)
         timers.current.push(t)
       } else {
         setDecoded((prev) => {
@@ -65,31 +72,59 @@ export default function LogoDecoder() {
     tick()
   }
 
-  function handleEnter() {
+  function openPanel() {
     clearAll()
     setOpen(true)
     setDecoded(ROWS.map((r) => r.word.replace(/\S/g, randomGlyph)))
 
-    // Строки появляются каскадом
+    // Каскадная анимация по строкам
     ROWS.forEach((_, i) => {
-      const t = setTimeout(() => animateRow(i), i * 100)
+      const t = setTimeout(() => animateRow(i), i * ROW_STAGGER)
       timers.current.push(t)
     })
+
+    // Автоматическое закрытие — для мобильных и если пользователь
+    // оставил мышь на десктопе и не уводит её
+    const autoClose = setTimeout(closePanel, TOTAL_OPEN_MS)
+    timers.current.push(autoClose)
   }
 
-  function handleLeave() {
+  function closePanel() {
     clearAll()
     setOpen(false)
     setDecoded(ROWS.map(() => ''))
   }
 
+  // Тап мимо панели на мобильных → закрываем
+  useEffect(() => {
+    if (!open) return
+
+    function onOutside(e: PointerEvent) {
+      if (!wrapperRef.current?.contains(e.target as Node)) {
+        closePanel()
+      }
+    }
+
+    document.addEventListener('pointerdown', onOutside)
+    return () => document.removeEventListener('pointerdown', onOutside)
+  }, [open])
+
+  // Клик по самому логотипу — toggle (нужно для мобильных,
+  // т.к. на десктопе hover уже срабатывает раньше)
+  function handleLogoClick(e: React.MouseEvent) {
+    e.preventDefault()
+    if (open) closePanel()
+    else openPanel()
+  }
+
   return (
     <div
+      ref={wrapperRef}
       className={styles.wrapper}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
+      onMouseEnter={openPanel}
+      onMouseLeave={closePanel}
     >
-      <a className={styles.logo} href="#">
+      <a className={styles.logo} href="#" onClick={handleLogoClick}>
         tee.su
       </a>
 
