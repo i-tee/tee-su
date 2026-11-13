@@ -1,0 +1,493 @@
+{
+  "title": "Eugene Tarasov — Fullstack Web/AI Developer",
+  "meta": {
+    "viewport": "width=device-width, initial-scale=1",
+    "next-size-adjust": "",
+    "theme-color": "#1a1612",
+    "description": "Fullstack developer with 16+ years of experience. PHP, Laravel, NestJS, Vue.js, Next, React, Docker, AI. Available for new projects.",
+    "author": "Eugene Tarasov",
+    "keywords": "fullstack developer, php, laravel, nestjs, vue, react, docker, typescript",
+    "robots": "index, follow",
+    "og:title": "Eugene Tarasov — Fullstack Web/AI Developer",
+    "og:description": "Fullstack developer with 16+ years of experience. PHP, Laravel, NestJS, Vue.js, Next, React, Docker, AI. Available for new projects.",
+    "og:url": "https://tee.su/",
+    "og:site_name": "tee.su",
+    "og:locale": "en_US",
+    "og:image": "https://cloud.tee.su/1774520701418-i2026b.jpg",
+    "og:image:alt": "Eugene Tarasov — Fullstack Developer",
+    "og:image:width": "1200",
+    "og:image:height": "630",
+    "og:type": "website",
+    "twitter:card": "summary_large_image",
+    "twitter:site": "@tee_su",
+    "twitter:creator": "@tee_su",
+    "twitter:title": "Eugene Tarasov — Fullstack Web/AI Developer",
+    "twitter:description": "Fullstack developer with 16+ years of experience. PHP, Laravel, NestJS, Vue.js, Next, React, Docker, AI. Available for new projects.",
+    "twitter:image": "https://cloud.tee.su/1774520701418-i2026b.jpg",
+    "twitter:image:alt": "Eugene Tarasov — Fullstack Developer"
+  },
+  "canonical": "https://tee.su/",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Eugene Tarasov",
+    "jobTitle": "Fullstack Developer",
+    "description": "Fullstack developer with 16+ years of experience. PHP, Laravel, NestJS, Vue.js, Next, React, Docker, AI. Available for new projects.",
+    "url": "https://tee.su",
+    "email": "web@tee.su",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://tee.su"
+    },
+    "image": {
+      "@type": "ImageObject",
+      "url": "https://cloud.tee.su/1774520701418-i2026b.jpg",
+      "contentUrl": "https://cloud.tee.su/1774520701418-i2026b.jpg"
+    },
+    "sameAs": [
+      "https://github.com/i-tee",
+      "https://t.me/tee_su"
+    ]
+  },
+  "skillGroups": [
+    {
+      "id": 6,
+      "title": "AI Toolchain",
+      "subtitle": "// ai & agents",
+      "order": 0,
+      "category": "",
+      "skills": [
+        {
+          "id": 42,
+          "name": "LangChain ",
+          "isNew": true,
+          "order": 0,
+          "groupId": 6,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 34,
+          "name": "Anthropic",
+          "isNew": true,
+          "order": 0,
+          "groupId": 6,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 35,
+          "name": "Claude Code",
+          "isNew": true,
+          "order": 0,
+          "groupId": 6,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 36,
+          "name": "GitHub Copilot",
+          "isNew": false,
+          "order": 0,
+          "groupId": 6,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 37,
+          "name": "DeepSeek",
+          "isNew": false,
+          "order": 0,
+          "groupId": 6,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 38,
+          "name": "Kimi",
+          "isNew": false,
+          "order": 0,
+          "groupId": 6,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 39,
+          "name": "QWEN",
+          "isNew": false,
+          "order": 0,
+          "groupId": 6,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 41,
+          "name": "Moltbot",
+          "isNew": false,
+          "order": 0,
+          "groupId": 6,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 40,
+          "name": "OpenClaw",
+          "isNew": true,
+          "order": 0,
+          "groupId": 6,
+          "level": 0,
+          "isHighlighted": false
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Data & Tools",
+      "subtitle": "// databases & tools",
+      "order": 0,
+      "category": "",
+      "skills": [
+        {
+          "id": 31,
+          "name": "PostgreSQL",
+          "isNew": true,
+          "order": 0,
+          "groupId": 5,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 32,
+          "name": "DBeaver",
+          "isNew": true,
+          "order": 0,
+          "groupId": 5,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 33,
+          "name": "MySQL Workbench",
+          "isNew": false,
+          "order": 0,
+          "groupId": 5,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 30,
+          "name": "MySQL",
+          "isNew": false,
+          "order": 0,
+          "groupId": 5,
+          "level": 0,
+          "isHighlighted": false
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Vue & React",
+      "subtitle": "// frontend",
+      "order": 0,
+      "category": "",
+      "skills": [
+        {
+          "id": 12,
+          "name": "Vue.js",
+          "isNew": false,
+          "order": 0,
+          "groupId": 3,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 13,
+          "name": "React",
+          "isNew": true,
+          "order": 0,
+          "groupId": 3,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 14,
+          "name": "Next.js",
+          "isNew": true,
+          "order": 0,
+          "groupId": 3,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 15,
+          "name": "JavaScript",
+          "isNew": false,
+          "order": 0,
+          "groupId": 3,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 16,
+          "name": "jQuery",
+          "isNew": false,
+          "order": 0,
+          "groupId": 3,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 17,
+          "name": "HTML5",
+          "isNew": false,
+          "order": 0,
+          "groupId": 3,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 18,
+          "name": "CSS / Sass / Less",
+          "isNew": false,
+          "order": 0,
+          "groupId": 3,
+          "level": 0,
+          "isHighlighted": false
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Infrastructure",
+      "subtitle": "// devops & infra",
+      "order": 0,
+      "category": "",
+      "skills": [
+        {
+          "id": 19,
+          "name": "Linux",
+          "isNew": false,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 20,
+          "name": "Ubuntu",
+          "isNew": false,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 21,
+          "name": "Docker",
+          "isNew": true,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 22,
+          "name": "Nginx",
+          "isNew": false,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 23,
+          "name": "Caddy",
+          "isNew": true,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 24,
+          "name": "Git",
+          "isNew": false,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 25,
+          "name": "S3",
+          "isNew": true,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 26,
+          "name": "VPN",
+          "isNew": false,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 27,
+          "name": "StrongSwan",
+          "isNew": false,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 28,
+          "name": "IKEv2",
+          "isNew": false,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 29,
+          "name": "VLESS",
+          "isNew": true,
+          "order": 0,
+          "groupId": 4,
+          "level": 0,
+          "isHighlighted": false
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "title": "PHP & SQL",
+      "subtitle": "// backend · core",
+      "order": 1,
+      "category": "",
+      "skills": [
+        {
+          "id": 2,
+          "name": "PHP",
+          "isNew": false,
+          "order": 1,
+          "groupId": 1,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 3,
+          "name": "MySQL",
+          "isNew": false,
+          "order": 3,
+          "groupId": 1,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 5,
+          "name": "PostgreSQL",
+          "isNew": true,
+          "order": 0,
+          "groupId": 1,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 6,
+          "name": "REST API",
+          "isNew": false,
+          "order": 0,
+          "groupId": 1,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 7,
+          "name": "OpenAPI",
+          "isNew": false,
+          "order": 0,
+          "groupId": 1,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 1,
+          "name": "Laravel",
+          "isNew": false,
+          "order": 0,
+          "groupId": 1,
+          "level": 0,
+          "isHighlighted": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Node.js & Python",
+      "subtitle": "// backend · new stack",
+      "order": 2,
+      "category": "",
+      "skills": [
+        {
+          "id": 8,
+          "name": "Node.js",
+          "isNew": true,
+          "order": 0,
+          "groupId": 2,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 4,
+          "name": "NestJS",
+          "isNew": true,
+          "order": 0,
+          "groupId": 2,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 9,
+          "name": "TypeScript",
+          "isNew": true,
+          "order": 0,
+          "groupId": 2,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 11,
+          "name": "GraphQL",
+          "isNew": true,
+          "order": 0,
+          "groupId": 2,
+          "level": 0,
+          "isHighlighted": false
+        },
+        {
+          "id": 10,
+          "name": "Python",
+          "isNew": true,
+          "order": 0,
+          "groupId": 2,
+          "level": 0,
+          "isHighlighted": false
+        }
+      ]
+    }
+  ],
+  "education": [],
+  "heroImages": [
+    "lightUrl=https://cloud.tee.su/1774520659460-i2026w.jpg",
+    "lightAlt=Eugene Tarasov — fullstack developer (PHP, Laravel, Vue, React, Next.js, NestJS, TypeScript), SaaS and AI developer, founder of tee.su",
+    "darkUrl=https://cloud.tee.su/1774520701418-i2026b.jpg",
+    "darkAlt=Eugene Tarasov — fullstack developer (PHP, Laravel, Vue, React, Next.js, NestJS, TypeScript), SaaS and AI developer, founder of tee.su"
+  ]
+}

@@ -33,7 +33,8 @@ backend) + nginx + Postgres, всё в Docker. Production развёрнут н�
 - **NestJS 11** + TypeORM 0.3
 - **PostgreSQL 16**
 - **AdminJS 6** — админ-панель на `/admin`
-- S3 (Beget S3-compatible) для медиа — через `cloud.tee.su`
+- Медиа — локальный диск `backend/uploads` (`STORAGE_DRIVER=local`), S3 —
+  опционально через переключатель (см. "Хранилище медиа")
 
 ### Инфраструктура
 
@@ -163,6 +164,32 @@ Email из `personSameAs` извлекается в отдельное поле 
 
 ---
 
+## Хранилище медиа — переключатель `STORAGE_DRIVER`
+
+`backend/.env`: `STORAGE_DRIVER=local` (по умолчанию) или `s3`.
+
+- **local** — AdminJS кладёт файл в `backend/uploads/`, в БД (`image.url`)
+  хранится только ключ (`black.jpg`). `ImagesService` отдаёт наружу
+  `/uploads/<key>`. `S3UploadService.handlePostUpload` сразу выходит.
+- **s3** — после сохранения файл заливается в bucket, в БД пишется полный
+  URL (`S3_PUBLIC_URL/<key>`), локальный файл удаляется.
+
+Полные URL (`http...`) `ImagesService` не трогает — переключение драйвера
+не ломает старые записи.
+
+Как `/uploads/...` доходит до браузера:
+- **prod** — nginx `location /uploads` → backend
+- **dev** (nginx нет) — rewrite в `frontend/next.config.ts`
+  `/uploads/:path*` → `${API_URL}/uploads/:path*`. Этот же rewrite нужен
+  Next Image-оптимизатору: для относительного `src` он ходит к самому себе.
+  Rewrites вшиваются в build, поэтому дефолт `API_URL` = `http://backend:4000`.
+
+`backend/uploads/` в `.gitignore` → **файлы не в git**. В prod примонтирован
+bind mount `./backend/uploads:/app/uploads`, иначе `--force-recreate`
+стирал бы их. На новом сервере файлы копировать вручную (`scp`).
+
+---
+
 ## База данных — поведение TypeORM seed
 
 Каждый модуль (`profile`, `seo-meta`, `skill-groups`, ...) имеет
@@ -263,6 +290,33 @@ certbot certonly --webroot -w /var/www/certbot \
 ```
 
 Теперь конфиг renewal у всех трёх — webroot, cron работает.
+
+### 🔥 Инцидент: падение Beget (ноябрь 2026)
+
+Умер весь аккаунт Beget: VPS (сайт, прод-БД, бэкапы в `/root/backups/`)
+и S3 (ключи → `InvalidAccessKeyId`). Off-site бэкапов не было.
+
+Как восстановили:
+- **Код** — GitHub.
+- **Контент БД** — снепшот Web Archive от 2026-08-07: meta-теги, JSON-LD и
+  RSC-payload Next.js (в нём сериализованы `skillGroups` со всеми навыками и
+  ID). Разобран в `backend/seed/webarchive-2026-08-07.json`, из него
+  сгенерирован `backend/seed/restore-2026-11.sql`.
+- **Фото** — оригиналы у владельца; запасной источник был в
+  `frontend/.next/dev/cache/images/` (кеш Next Image-оптимизатора хранит
+  уменьшенные копии всех когда-либо показанных картинок).
+- **S3** — отключён переключателем `STORAGE_DRIVER=local`.
+
+Применить сид (перезаписывает seo_meta, profile, skill_group, skill, image):
+```bash
+docker exec -i tee-su-db psql -U postgres -d teesu < backend/seed/restore-2026-11.sql
+```
+
+Урок: бэкапы на том же сервере, что и БД, — это не бэкапы. Нужна off-site копия.
+
+Dev-нюанс: в dev `frontend/.next` — на хосте (bind mount `./frontend:/app`),
+поэтому fetch-кеш переживает `--force-recreate`. Если фронт рисует старые
+данные — удалить `frontend/.next/dev/cache/fetch-cache`.
 
 ### Bind mount для certbot
 
@@ -601,6 +655,7 @@ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 - `/var/www/certbot` → nginx — webroot для ACME challenge
 - `/var/www/tee-su/nginx/nginx.conf` → nginx — конфиг
 - `/var/www/tee-su/backend/.env` → backend — переменные окружения
+- `/var/www/tee-su/backend/uploads` → backend `/app/uploads` — медиа (local driver)
 
 ### Cron tasks
 
@@ -657,10 +712,19 @@ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
    nano backend/.env   # заполнить DB creds, S3 keys, ADMIN_PASSWORD
    ```
 
-4. **Восстановить `pgdata` из бэкапа** (если есть pg_dump):
+4. **Восстановить контент БД.** Если есть свежий pg_dump:
    ```bash
    docker compose -f docker-compose.prod.yml up -d db
    gunzip -c teesu-YYYYMMDD.sql.gz | docker exec -i tee-su-db psql -U postgres teesu
+   ```
+   Если нет — поднять backend (создаст схему) и применить сид:
+   ```bash
+   docker exec -i tee-su-db psql -U postgres -d teesu < backend/seed/restore-2026-11.sql
+   ```
+
+4a. **Скопировать медиа** (не в git):
+   ```bash
+   scp backend/uploads/*.jpg root@<new-ip>:/var/www/tee-su/backend/uploads/
    ```
 
 5. **Сменить DNS** A-записи tee.su / mrtorres.ru / xab.su на новый IP.
