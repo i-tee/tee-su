@@ -10,11 +10,22 @@ export class ImagesService {
     private repo: Repository<Image>,
   ) {}
 
-  findAll(): Promise<Image[]> {
-    return this.repo.find({ order: { sortOrder: 'ASC' } });
+  async findAll(): Promise<Image[]> {
+    const images = await this.repo.find({ order: { sortOrder: 'ASC' } });
+    return images.map((img) => this.withPublicUrl(img));
   }
 
-  findOne(id: number): Promise<Image | null> {
-    return this.repo.findOne({ where: { id } });
+  async findOne(id: number): Promise<Image | null> {
+    const img = await this.repo.findOne({ where: { id } });
+    return img ? this.withPublicUrl(img) : null;
+  }
+
+  // Локальный диск хранит в url только ключ файла — отдаём наружу путь /uploads/<key>.
+  // Полные URL (S3) пропускаем как есть, поэтому переключение драйвера не ломает старые записи.
+  private withPublicUrl(img: Image): Image {
+    if (img.url && !/^https?:\/\//.test(img.url) && !img.url.startsWith('/')) {
+      img.url = `/uploads/${img.url}`;
+    }
+    return img;
   }
 }

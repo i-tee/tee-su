@@ -14,12 +14,14 @@ export class S3UploadService {
   private readonly bucket: string;
   private readonly publicUrl: string;
   private readonly uploadsDir: string;
+  private readonly enabled: boolean;
 
   constructor(
     @InjectRepository(Image)
     private readonly repo: Repository<Image>,
     private readonly config: ConfigService,
   ) {
+    this.enabled = this.config.get<string>('STORAGE_DRIVER', 'local') === 's3';
     this.bucket = this.config.get<string>('S3_BUCKET', '');
     this.publicUrl = this.config.get<string>('S3_PUBLIC_URL', '');
     this.uploadsDir = join(__dirname, '..', '..', 'uploads');
@@ -40,6 +42,13 @@ export class S3UploadService {
    * Если флаг saveToS3 установлен — запускает полный цикл загрузки в S3.
    */
   async handlePostUpload(imageId: number): Promise<void> {
+    if (!this.enabled) {
+      this.logger.log(
+        `[S3] STORAGE_DRIVER != s3 — image #${imageId} остаётся на локальном диске`,
+      );
+      return;
+    }
+
     this.logger.log(`[S3] handlePostUpload вызван для image #${imageId}`);
 
     const image = await this.repo.findOne({ where: { id: imageId } });

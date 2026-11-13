@@ -32,6 +32,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./backend/.env
+    volumes:
+      - ./backend/uploads:/app/uploads
     environment:
       - TMPDIR=/app/uploads
       - NODE_ENV=production
