@@ -5,6 +5,8 @@
 **паттерны**, к которым мы пришли путём проб и инцидентов. Если в проекте
 что-то выглядит странно — сначала ищи объяснение здесь.
 
+Пошаговая установка на сервер — в [README.md](README.md#production-deployment).
+
 ---
 
 ## Что это вообще
@@ -13,8 +15,7 @@
 fullstack-разработчик и автор MCP-серверов.
 
 Архитектура: **monorepo** с двумя независимыми приложениями (frontend +
-backend) + nginx + Postgres, всё в Docker. Production развёрнут на
-одном VPS, домен tee.su.
+backend) + nginx + Postgres, всё в Docker. Production — один VPS.
 
 ---
 
@@ -38,9 +39,9 @@ backend) + nginx + Postgres, всё в Docker. Production развёрнут н�
 
 ### Инфраструктура
 
-- Docker + Docker Compose
-- Nginx reverse proxy (на хосте, не контейнере nginx-сервиса)
-- Let's Encrypt SSL (webroot mode)
+- Docker + Docker Compose: 4 контейнера — `nginx`, `frontend`, `backend`, `db`
+- Nginx — контейнер `nginx:alpine`, конфиг примонтирован из `nginx/nginx.conf`
+- Let's Encrypt SSL, обновление через webroot
 - GitHub Actions для авто-деплоя по push в `main`
 
 ---
@@ -52,9 +53,10 @@ tee-su/
 ├── .github/workflows/deploy.yml   ← GitHub Actions auto-deploy
 ├── frontend/
 │   ├── public/                    ← favicons, manifest, og-image
+│   ├── next.config.ts             ← rewrite /uploads → backend
 │   └── src/
 │       ├── app/
-│       │   ├── layout.tsx         ← root layout + JSON-LD + AnchorScroll
+│       │   ├── layout.tsx         ← root layout + JSON-LD + AnchorScroll + аналитика
 │       │   ├── metadata.ts        ← Next.js Metadata из API
 │       │   ├── robots.ts          ← /robots.txt
 │       │   └── sitemap.ts         ← /sitemap.xml
@@ -72,15 +74,18 @@ tee-su/
 │       ├── locales/{en,ru}.ts     ← ВСЕ тексты сайта
 │       └── services/pageService.ts ← все запросы к API
 ├── backend/
+│   ├── seed/                      ← сид восстановления контента (см. "Инциденты")
+│   ├── uploads/                   ← медиа при STORAGE_DRIVER=local (не в git)
+│   ├── scripts/pre-bundle.js      ← сборка бандла AdminJS на этапе Docker build
 │   └── src/
 │       ├── admin/                 ← AdminJS конфиг
 │       ├── seo-meta/              ← SEO-настройки (singleton entity)
-│       ├── profile/, skills/, skill-groups/, education/, images/
-├── nginx/nginx.conf               ← reverse proxy + SSL
+│       ├── images/                ← Image entity + S3UploadService
+│       └── profile/, skills/, skill-groups/, education/
+├── nginx/nginx.conf               ← reverse proxy + SSL + редирект-домены
 ├── docker-compose.yml             ← dev
 ├── docker-compose.prod.yml        ← prod
-├── deploy.sh                      ← скрипт деплоя (вызывается из Actions)
-└── ssl-init.sh                    ← первичная инициализация SSL (legacy)
+└── deploy.sh                      ← скрипт деплоя (вызывается из Actions)
 ```
 
 ---
@@ -102,7 +107,7 @@ tee-su/
 Фронт читает через `GET /seo-meta`, отдаёт во все нужные места —
 `<Metadata>`, JSON-LD, `<YandexMetrika>`, `<GoogleAnalytics>`.
 
-**Почему так:** менять SEO в админке без редеплоя. Один источник правды.
+**Почему так:** менять SEO в админке без правки кода. Один источник правды.
 
 ### 2. JSON-LD Person.image — это `ImageObject`, не строка
 
@@ -111,8 +116,8 @@ tee-su/
 ```json
 "image": {
   "@type": "ImageObject",
-  "url": "https://cloud.tee.su/...",
-  "contentUrl": "https://cloud.tee.su/..."
+  "url": "https://tee.su/uploads/black.jpg",
+  "contentUrl": "https://tee.su/uploads/black.jpg"
 }
 ```
 
@@ -188,9 +193,14 @@ Email из `personSameAs` извлекается в отдельное поле 
 bind mount `./backend/uploads:/app/uploads`, иначе `--force-recreate`
 стирал бы их. На новом сервере файлы копировать вручную (`scp`).
 
+Сейчас (ноябрь 2026) работаем на `local`. S3 вернём после переезда обратно
+на Beget.
+
 ---
 
-## База данных — поведение TypeORM seed
+## База данных
+
+### Поведение TypeORM seed в `onModuleInit`
 
 Каждый модуль (`profile`, `seo-meta`, `skill-groups`, ...) имеет
 `onModuleInit()`, который **создаёт дефолтную запись только если таблица
@@ -200,6 +210,23 @@ bind mount `./backend/uploads:/app/uploads`, иначе `--force-recreate`
 - Изменения через AdminJS → сохраняются в БД → **сид больше не сработает**
 - Менять дефолты в коде после первого запуска **не имеет смысла** —
   нужно править в AdminJS
+
+Поля дефолтов должны совпадать с колонками entity: лишние ключи TypeORM
+молча игнорирует (так `experience: 16` в сиде профиля годами ничего не
+записывал, колонка называется `experience_start`).
+
+### Сид восстановления контента
+
+`backend/seed/restore-2026-11.sql` — реальный контент сайта (SeoMeta,
+профиль, 6 групп / 42 навыка, 2 картинки). Перезаписывает таблицы:
+
+```bash
+docker exec -i tee-su-db psql -U postgres -d teesu < backend/seed/restore-2026-11.sql
+```
+
+Применять после первого старта бэкенда (таблицы создаёт `synchronize: true`).
+Если контент менялся в AdminJS — сид устарел, свежий источник правды —
+бэкап `/root/backups/`.
 
 ---
 
@@ -211,10 +238,10 @@ bind mount `./backend/uploads:/app/uploads`, иначе `--force-recreate`
 **Это значит:** изменения в AdminJS → видны на сайте максимум через 1 час
 ИЛИ сразу после пересоздания контейнера фронтенда (`--force-recreate`).
 
-`deploy.sh` всегда использует `--force-recreate`, поэтому любой `git push`
+`deploy.sh` всегда использует `--force-recreate`, поэтому любой деплой
 сбрасывает кеш и подтягивает свежие данные.
 
-Если нужно увидеть изменения админки прямо сейчас без коммита:
+Увидеть изменения админки прямо сейчас без деплоя:
 ```bash
 cd /var/www/tee-su
 docker compose -f docker-compose.prod.yml up -d --force-recreate frontend
@@ -229,11 +256,15 @@ docker compose -f docker-compose.prod.yml up -d --force-recreate frontend
 Триггер: `push` в `main`. Через `appleboy/ssh-action` подключается к VPS
 с приватным ключом из secrets и запускает `deploy.sh`.
 
-Нужны 4 секрета в репо:
-- `SSH_HOST` — `tee.su` (домен, а не IP — чтобы переезд VPS не ломал)
+Секреты репо:
+- `SSH_HOST` — `tee.su` (домен, а не IP — переезд VPS не ломает деплой,
+  достаточно сменить DNS и ключ)
 - `SSH_USER` — `root`
 - `SSH_PRIVATE_KEY` — содержимое `~/.ssh/github_deploy` с сервера
 - `PROJECT_PATH` — `/var/www/tee-su`
+
+Рабочая ветка — `develop`, в `main` мержим перед выкаткой. Перед мержем
+всегда `git pull origin main`: на GitHub в `main` бывают merge-коммиты от PR.
 
 ### `deploy.sh` на сервере
 
@@ -253,94 +284,45 @@ docker image prune -f
 
 ---
 
-## SSL — Let's Encrypt (webroot mode)
+## SSL — Let's Encrypt
 
-Все 3 серта (`tee.su`, `mrtorres.ru`, `xab.su`) выпущены через **webroot
-challenge**.
+Три сертификата: `tee.su`, `mrtorres.ru`, `xab.su` (каждый с `www.`).
 
-Как это работает: certbot кладёт challenge-файл в `/var/www/certbot`
-(монтирован в nginx-контейнер как bind mount), nginx отдаёт его на порту 80
-по location `/.well-known/acme-challenge/`. После проверки — сертификат
-получен, файлы летят в `/etc/letsencrypt/live/<domain>/`.
+### Обновление — webroot + systemd
 
-### Cron автообновления
+Certbot кладёт challenge-файл в `/var/www/certbot` (bind mount в
+nginx-контейнер), nginx отдаёт его на порту 80 по location
+`/.well-known/acme-challenge/`. nginx при этом не останавливается.
 
-```
-0 3 * * * certbot renew --quiet && \
-  docker compose -f /var/www/tee-su/docker-compose.prod.yml restart nginx
-```
+- Запуск обновления — `certbot.timer` (ставится пакетом certbot, дважды в
+  сутки). Отдельной cron-строки для SSL **нет**.
+- После успешного обновления хук
+  `/etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh` перезапускает
+  nginx-контейнер, чтобы он подхватил новые файлы.
+- Во всех `/etc/letsencrypt/renewal/*.conf` должно быть
+  `authenticator = webroot`. Проверка: `certbot renew --dry-run`.
 
-### ⚠️ Инцидент: tee.su протух (июнь 2026)
+### Первичный выпуск на новом сервере
 
-**Что случилось:** изначально `ssl-init.sh` выпускал серт для `tee.su` в
-**standalone-mode** (он останавливал nginx, запрашивал серт, стартовал
-заново). Конфиг renewal сохранил `authenticator = standalone`. Cron пытался
-обновить, но не мог поднять свой web на порту 80 (там работал docker nginx) —
-renewal падал тихо, серт истёк.
+Курица и яйцо: `nginx.conf` ссылается на файлы сертификатов, без них nginx
+не стартует, а webroot требует работающего nginx. Решение:
 
-**mrtorres.ru и xab.su** обновлялись нормально, потому что их сразу
-создавали с `--webroot`.
+1. До первого деплоя порт 80 свободен → выпустить `certbot certonly --standalone`.
+2. Задеплоить.
+3. `certbot reconfigure --cert-name <домен> --webroot -w /var/www/certbot`
+   — переключить обновление на webroot.
 
-**Фикс:** перевыпустить tee.su с явным webroot:
-```bash
-certbot certonly --webroot -w /var/www/certbot \
-  -d tee.su -d www.tee.su \
-  --force-renewal \
-  --non-interactive --agree-tos -m web@tee.su
-```
+Шаг 3 обязателен — см. июньский инцидент.
 
-Теперь конфиг renewal у всех трёх — webroot, cron работает.
+### Bind mount `/var/www/certbot`
 
-### 🔥 Инцидент: падение Beget (ноябрь 2026)
-
-Умер весь аккаунт Beget: VPS (сайт, прод-БД, бэкапы в `/root/backups/`)
-и S3 (ключи → `InvalidAccessKeyId`). Off-site бэкапов не было.
-
-Как восстановили:
-- **Код** — GitHub.
-- **Контент БД** — снепшот Web Archive от 2026-08-07: meta-теги, JSON-LD и
-  RSC-payload Next.js (в нём сериализованы `skillGroups` со всеми навыками и
-  ID). Разобран в `backend/seed/webarchive-2026-08-07.json`, из него
-  сгенерирован `backend/seed/restore-2026-11.sql`.
-- **Фото** — оригиналы у владельца; запасной источник был в
-  `frontend/.next/dev/cache/images/` (кеш Next Image-оптимизатора хранит
-  уменьшенные копии всех когда-либо показанных картинок).
-- **S3** — отключён переключателем `STORAGE_DRIVER=local`.
-
-Применить сид (перезаписывает seo_meta, profile, skill_group, skill, image):
-```bash
-docker exec -i tee-su-db psql -U postgres -d teesu < backend/seed/restore-2026-11.sql
-```
-
-Урок: бэкапы на том же сервере, что и БД, — это не бэкапы. Нужна off-site копия.
-
-Dev-нюанс: в dev `frontend/.next` — на хосте (bind mount `./frontend:/app`),
-поэтому fetch-кеш переживает `--force-recreate`. Если фронт рисует старые
-данные — удалить `frontend/.next/dev/cache/fetch-cache`.
-
-### Bind mount для certbot
-
-В `docker-compose.prod.yml`:
-```yaml
-volumes:
-  - /var/www/certbot:/var/www/certbot   ← bind mount, НЕ named volume
-```
-
-Изначально был named volume — но тогда certbot на хосте не видел папку
-(она внутри Docker volume драйвера). После смены на bind mount работает.
+В `docker-compose.prod.yml` — **bind mount**, не named volume: certbot
+работает на хосте и должен писать туда же, куда смотрит nginx в контейнере.
+С named volume certbot папку не видит.
 
 ---
 
-## Bind mount certbot — почему
-
-Если используется named volume для `certbot-webroot:/var/www/certbot`,
-то certbot на хосте не сможет писать challenge-файлы туда, куда смотрит
-nginx внутри контейнера. Bind mount решает это: `/var/www/certbot` на
-хосте = тот же путь в контейнере.
-
----
-
-## Поддомены mrtorres.ru и xab.su
+## Редирект-домены mrtorres.ru и xab.su
 
 Это **редиректы на tee.su**, но с полноценным SSL. Зачем серт для
 редиректа? Чтобы браузер не показывал предупреждение при заходе на
@@ -351,7 +333,9 @@ nginx внутри контейнера. Bind mount решает это: `/var/w
 - HTTPS-блок: подключает свой серт + редирект на `https://tee.su`
 
 Let's Encrypt не интересует контент сайта — только что мы владеем доменом
-(DNS указывает на наш IP + можем отдать challenge-файл).
+(DNS указывает на наш IP + можем отдать challenge-файл). Если домен
+перестанет указывать на сервер — его серт не обновится, а nginx не
+стартует без файла серта. Тогда убрать блоки домена из `nginx.conf`.
 
 ---
 
@@ -359,7 +343,9 @@ Let's Encrypt не интересует контент сайта — тольк
 
 `YandexMetrika` (97734688) + `GoogleAnalytics` (G-479TXB6T05). Обе через
 `next/script` с `strategy="afterInteractive"` — грузятся после
-гидратации, не блокируют первый рендер.
+гидратации, не блокируют первый рендер. В `view-source:` их `<script>` не
+видно — они вставляются в DOM после гидратации; проверять в DevTools
+(`typeof ym`, `typeof gtag`).
 
 ID хранятся в **БД** (поля SeoMeta.yandexMetrikaId, googleAnalyticsId),
 а не в .env. Если поле пустое — компонент возвращает `null`, скрипт не
@@ -381,61 +367,164 @@ ID хранятся в **БД** (поля SeoMeta.yandexMetrikaId, googleAnalyti
 
 ---
 
+## Нестандартные решения в бэкенде
+
+### `bodyParser: false` (`backend/src/main.ts`)
+
+AdminJS сам парсит body (multer для upload). С включённым bodyParser
+AdminJS ломается.
+
+### `/uploads/` redirect middleware (`backend/src/main.ts`)
+
+AdminJS upload-feature при отображении картинки подставляет `/uploads/`
+перед значением из БД. Если там полный S3-URL, получается
+`/uploads/https://...`. Middleware ловит этот случай и делает 302 на
+реальный URL. Без этого в админке не отображались бы превью S3-картинок.
+
+### AdminJS SeoMeta — singleton-защита
+
+В `admin.module.ts` для ресурса `SeoMeta`:
+
+```ts
+actions: {
+  new: { isAccessible: false },
+  delete: { isAccessible: false },
+  bulkDelete: { isAccessible: false },
+},
+```
+
+Скрывает "Создать", "Удалить", "Массовое удаление" — SeoMeta должен быть
+одной строкой. Если удалить — отвалятся JSON-LD, OG-теги, аналитика.
+
+### Pre-bundle AdminJS (`backend/scripts/pre-bundle.js`)
+
+Запускается на этапе Docker build, генерирует `adminjs/bundle.js`
+заранее. Три тонкости:
+
+1. `process.env.NODE_ENV = 'production'` **до** `require('adminjs')` —
+   router AdminJS проверяет env на этапе require.
+2. `ADMIN_JS_TMP_DIR = 'adminjs'` (без точки) — Express `send` модуль
+   режет dotfile-папки по умолчанию (`dotfiles: 'ignore'`), и `.adminjs/`
+   возвращает 404.
+3. `uploadFileFeature(...)` ВЫЗЫВАЕТСЯ (не просто импортируется) —
+   иначе `AdminJS.bundle()` для upload-компонентов не вызывается.
+
+Без всех трёх админка показывает "Component X has not been bundled".
+
+---
+
 ## Известные подводные камни
 
-### AdminJS components.bundle.js 404 в проде
+### Docker build OOM на сервере с 2 ГБ
 
-Express `send` модуль игнорирует папки-dotfiles, а `@adminjs/upload`
-регистрирует компоненты только при вызове `uploadFeature()`. Решение:
-- Pre-bundle на этапе Docker build через `backend/scripts/pre-bundle.js`
-- `ADMIN_JS_TMP_DIR=adminjs` (без точки)
-- `ADMIN_JS_SKIP_BUNDLE=true`
+`nest build` (tsc с типами AdminJS) требует >1 ГБ кучи, дефолтный лимит
+Node — около половины RAM. Решение в `backend/Dockerfile`:
+`NODE_OPTIONS=--max-old-space-size=1536` для шага сборки + swap 2 ГБ на
+сервере. Swap сам по себе не помогает — упираемся в лимит кучи V8, а не
+в память системы.
 
 ### Next.js Image Optimization 400
 
 Если `next.config.ts` не скопирован в runner-стейдж frontend Dockerfile,
-оптимизация внешних URL валится с 400. Решение: явный COPY в Dockerfile.
-
-### Docker build OOM на 1GB RAM
-
-`nest build` крашится. Решение: своп 2GB + переключить NestJS на SWC
-(`"builder": "swc"` в `nest-cli.json`).
+оптимизация валится с 400, а rewrite `/uploads` не работает.
+Решение: явный COPY в Dockerfile (уже есть).
 
 ### Frontend fetch-кеш не очищается soft restart'ом
 
 `docker compose restart frontend` НЕ помогает — Next.js fetch-кеш в
 `.next/cache/fetch-cache/` живёт в writable-слое контейнера. Нужен
-`up -d --force-recreate frontend`. Это уже встроено в `deploy.sh`.
+`up -d --force-recreate frontend`. Это встроено в `deploy.sh`.
+
+В **dev** `frontend/.next` лежит на хосте (bind mount `./frontend:/app`),
+поэтому кеш переживает даже `--force-recreate`. Если фронт рисует старые
+данные — удалить `frontend/.next/dev/cache/fetch-cache`.
+
+### Dev: порт фронта 3100
+
+В `docker-compose.yml` фронт проброшен на **3100** — порт 3000 на машине
+разработчика занят другими проектами. Внутри контейнера по-прежнему 3000.
 
 ---
 
-## Полезные команды на проде
+## Инциденты
 
-```bash
-# Проверка статуса всех контейнеров
-docker compose -f /var/www/tee-su/docker-compose.prod.yml ps
+### Июнь 2026 — протух SSL tee.su
 
-# Логи фронтенда / бэкенда
-docker logs tee-su-frontend --tail 50
-docker logs tee-su-backend --tail 50
+Первый серт tee.su выпускался скриптом в **standalone-mode** (стоп nginx →
+certbot → старт nginx). В renewal-конфиге осталось
+`authenticator = standalone`. Обновление не могло занять порт 80 (там
+docker nginx), падало молча, серт истёк. mrtorres.ru и xab.su выпускались
+сразу с `--webroot` и обновлялись нормально.
 
-# Проверка сертификатов
-certbot certificates
+Урок: после любого standalone-выпуска переключать обновление на webroot
+(`certbot reconfigure`) и проверять `certbot renew --dry-run`.
 
-# Принудительное обновление одного серта
-certbot certonly --webroot -w /var/www/certbot \
-  -d <domain> -d www.<domain> \
-  --force-renewal --non-interactive --agree-tos -m web@tee.su
+### Ноябрь 2026 — падение Beget
 
-# Жёсткий передеплой без git push
-cd /var/www/tee-su && bash deploy.sh
+Умер VPS на Beget (сайт, прод-БД, бэкапы в `/root/backups/`), S3-ключи
+перестали работать (`InvalidAccessKeyId`). Off-site бэкапов не было.
 
-# Очистка fetch-кеша фронта без билда
-cd /var/www/tee-su && \
-  docker compose -f docker-compose.prod.yml up -d --force-recreate frontend
+Как восстановили:
+- **Код** — GitHub.
+- **Контент БД** — снепшот Web Archive от 2026-08-07: meta-теги, JSON-LD и
+  RSC-payload Next.js (в нём сериализованы `skillGroups` со всеми навыками и
+  ID). Разобран в `backend/seed/webarchive-2026-08-07.json`, из него
+  сгенерирован `backend/seed/restore-2026-11.sql`.
+- **Фото** — оригиналы у владельца. Запасной источник был в
+  `frontend/.next/dev/cache/images/`: кеш Next Image-оптимизатора хранит
+  уменьшенные копии всех когда-либо показанных картинок.
+- **S3** — отключён переключателем `STORAGE_DRIVER=local`.
+- **Хостинг** — временно Timeweb (см. "Состояние сервера").
 
-# Прямой запрос к фронтенду минуя nginx (для дебага)
-docker exec tee-su-frontend wget -qO- http://localhost:3000/ | head -100
+Урок: бэкапы на том же сервере, что и БД, — это не бэкапы.
+
+---
+
+## Технический долг
+
+Зафиксировано, чтобы помнить: это **известный плохой паттерн**, а не
+"так задумано".
+
+### Нет off-site бэкапов
+
+Бэкапы в `/root/backups/` лежат на том же VPS. Если сервер умрёт — умрут
+вместе с БД (уже случилось в ноябре 2026). Нужна копия вне сервера: S3
+другого провайдера или rsync на другую машину.
+
+### `synchronize: true` в TypeORM
+
+`backend/src/app.module.ts` — на старте TypeORM **автоматически
+синхронизирует схему БД с entity-классами**. Удобно, но в проде может
+случайно сдропать колонку при рефакторинге.
+
+Правильно: миграции + `synchronize: false`. Пока работает, потому что
+схема меняется только добавлением колонок. Сделать миграции — перед первым
+удалением/переименованием колонки.
+
+### PostgreSQL креды — `postgres/postgres`
+
+Слабый пароль в `docker-compose.prod.yml`, но порт БД наружу не проброшен —
+доступ только из Docker-сети. Если выставлять порт или подключаться с
+хоста — пароль менять обязательно.
+
+### Сессии AdminJS в памяти
+
+`express-session` с `MemoryStore` (в логе бэкенда предупреждение
+`MemoryStore is not designed for a production environment`). Последствия:
+при каждом деплое админ разлогинивается. Утечка памяти на одного
+администратора несущественна.
+
+### Nginx: нет HTTP/2 и security headers
+
+В HTTPS-блоках `listen 443 ssl;` без `http2 on;` — отдаётся HTTP/1.1.
+Не настроены `Strict-Transport-Security`, `X-Content-Type-Options`,
+`Referrer-Policy`. Минимум для добавления в HTTPS-блок tee.su:
+
+```nginx
+http2 on;
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 ```
 
 ---
@@ -455,293 +544,128 @@ docker exec tee-su-frontend wget -qO- http://localhost:3000/ | head -100
 
 ## Что НЕ менять без вдумывания
 
-- `revalidate: 3600` в `getSeoMeta()` — изменения админки видны через час
-  ИЛИ через `--force-recreate`. Уменьшать только если очень нужно мгновенно.
-- `--force-recreate` в `deploy.sh` — убирать нельзя, иначе изменения в БД
-  не подхватываются.
-- `bind mount` `/var/www/certbot` — на named volume не переключать, certbot
-  с хоста перестанет видеть папку.
-- `authenticator = webroot` в renewal-конфигах — на standalone не менять,
-  иначе renewal будет падать с занятым портом 80.
-- `bodyParser: false` в `backend/src/main.ts` — НЕ включать. AdminJS сам
-  парсит body (multer для upload). С включённым bodyParser AdminJS ломается.
-- `synchronize: true` в TypeORM (`app.module.ts`) — см. раздел "Технический долг".
-- Docker volume `pgdata` — **ВСЯ БАЗА**. Если стереть `docker volume rm tee-su_pgdata`
-  или пересоздать кастомным compose-down с флагом — потеряешь весь контент сайта.
+- `revalidate: 3600` в `pageService.ts` — изменения админки видны через час
+  ИЛИ после `--force-recreate`.
+- `--force-recreate` в `deploy.sh` — иначе изменения в БД не подхватываются.
+- Bind mount `/var/www/certbot` — на named volume не переключать.
+- `authenticator = webroot` в renewal-конфигах — на standalone не менять.
+- Bind mount `./backend/uploads:/app/uploads` в prod — без него медиа
+  стирается при каждом деплое.
+- `NODE_OPTIONS=--max-old-space-size=1536` в `backend/Dockerfile` — без
+  него сборка падает на сервере с 2 ГБ.
+- `bodyParser: false` в `backend/src/main.ts` — AdminJS ломается.
+- `ADMIN_AUTH_ENABLED=true` в prod `.env` — иначе `/admin` открыт всем.
+- Docker volume `tee-su_pgdata` — **ВСЯ БАЗА**. `docker compose down -v`
+  или `docker volume rm` уничтожат контент.
 
 ---
 
-## Дополнительные нестандартные решения (по коду)
-
-### `/uploads/` redirect middleware (`backend/src/main.ts`)
-
-AdminJS upload-feature при отображении картинки из БД подставляет
-`/uploads/<url>` префикс. Если url в БД уже полный S3-URL вида
-`https://cloud.tee.su/...`, получается ломанный URL вида
-`/uploads/https://cloud.tee.su/...`. Middleware ловит этот случай и
-делает 302 редирект на реальный URL:
-
-```ts
-app.use('/uploads', (req, res, next) => {
-  const path = req.url.replace(/^\//, '');
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return res.redirect(302, path);
-  }
-  next();
-});
-```
-
-Без этого в админке не отображались бы превью S3-картинок.
-
-### AdminJS SeoMeta — singleton-защита
-
-В `admin.module.ts` для ресурса `SeoMeta`:
-
-```ts
-actions: {
-  new: { isAccessible: false },
-  delete: { isAccessible: false },
-  bulkDelete: { isAccessible: false },
-},
-```
-
-Скрывает кнопки "Создать", "Удалить", "Массовое удаление" в админке —
-SeoMeta должен быть один-единственный ряд (singleton). Если случайно
-удалить — отвалится JSON-LD, OG-теги, аналитика.
-
-### Pre-bundle AdminJS (`backend/scripts/pre-bundle.js`)
-
-Запускается на этапе Docker build, генерирует `adminjs/bundle.js`
-заранее. Почему важно — три тонкости:
-
-1. `process.env.NODE_ENV = 'production'` **до** `require('adminjs')` —
-   router AdminJS проверяет env на этапе require.
-2. `ADMIN_JS_TMP_DIR = 'adminjs'` (без точки) — Express `send` модуль
-   режет dotfile-папки по умолчанию (`dotfiles: 'ignore'`), и `.adminjs/`
-   возвращает 404.
-3. `uploadFileFeature(...)` ВЫЗЫВАЕТСЯ (не просто импортируется) —
-   иначе `AdminJS.bundle()` для upload-компонентов не вызывается, и
-   они в проде не работают.
-
-Все три фикса вместе — иначе админка показывает "Component X has not
-been bundled".
-
-### Два nginx-конфига
-
-- **`nginx/nginx.conf`** — актуальный production-конфиг. SSL + поддомены
-  mrtorres/xab + редиректы. Монтируется в `docker-compose.prod.yml`.
-- **`nginx/nginx.ssl.conf`** — **устаревший**. Был template'ом для
-  `ssl-init.sh` (см. ниже). НЕ используется, не отражает текущее
-  состояние. Можно удалить.
-
-### `ssl-init.sh` — устарел
-
-Скрипт первичной инициализации SSL: останавливал nginx, выпускал серт
-в standalone-mode, копировал `nginx.ssl.conf` поверх `nginx.conf`,
-поднимал nginx обратно.
-
-**Не использовать** — сейчас все серты выпускаются через webroot
-напрямую через `certbot certonly --webroot`, без остановки nginx.
-Скрипт оставлен для истории.
-
-### Frontend: `components/Greeting.tsx` — мусор
-
-Демо-компонент из туториала. Не подключён нигде, можно удалить:
+## Полезные команды на проде
 
 ```bash
-rm frontend/src/components/Greeting.tsx
+# Статус контейнеров
+docker compose -f /var/www/tee-su/docker-compose.prod.yml ps
+
+# Логи
+docker logs tee-su-frontend --tail 50
+docker logs tee-su-backend --tail 50
+
+# Сертификаты и проверка обновления
+certbot certificates
+certbot renew --dry-run
+systemctl list-timers certbot.timer
+
+# Ручной передеплой без git push
+cd /var/www/tee-su && bash deploy.sh
+
+# Сброс fetch-кеша фронта без сборки
+cd /var/www/tee-su && \
+  docker compose -f docker-compose.prod.yml up -d --force-recreate frontend
+
+# Запрос к фронтенду минуя nginx (дебаг)
+docker exec tee-su-frontend wget -qO- http://localhost:3000/ | head -100
+
+# Ручной бэкап БД
+docker exec tee-su-db pg_dump -U postgres teesu | gzip > /root/backups/teesu-manual.sql.gz
+
+# Восстановление БД из бэкапа
+gunzip -c /root/backups/teesu-YYYYMMDD.sql.gz | docker exec -i tee-su-db psql -U postgres teesu
 ```
 
 ---
 
-## Технический долг
+## Состояние сервера (snapshot 13.11.2026)
 
-Зафиксировано, чтобы помнить, что это **известный плохой паттерн**, а не
-"так задумано":
-
-### `synchronize: true` в TypeORM
-
-```ts
-// backend/src/app.module.ts
-TypeOrmModule.forRootAsync({
-  ...
-  synchronize: true,
-```
-
-Это значит, что на старте бэкенда TypeORM **автоматически синхронизирует
-схему БД с entity-классами** — создаёт таблицы, добавляет колонки,
-изменяет типы. Удобно для разработки, **опасно в проде** — может
-случайно сдропать колонку при рефакторинге.
-
-Что должно быть: миграции через `typeorm-migrations` + `synchronize: false`.
-
-**Пока работает, потому что:**
-- Изменения схемы идут только через изменение entity-классов
-- Удалений колонок не было (только добавления — пример: `yandexMetrikaId`,
-  `googleAnalyticsId`)
-- БД маленькая, контент в основном через AdminJS
-
-Когда стоит сделать миграции: перед первым реальным удалением/
-переименованием колонки.
-
-### PostgreSQL креды — `postgres/postgres`
-
-В `docker-compose.prod.yml`:
-```yaml
-db:
-  environment:
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres
-```
-
-Слабый пароль, но БД не выставлена наружу — только внутри Docker network
-`tee-su_default`. Снаружи (с хоста или интернета) подключиться нельзя.
-
-Если когда-нибудь захочется выставить порт наружу или подключаться с
-хоста к prod-БД — менять пароль обязательно.
-
-### Нет HTTP security headers
-
-В `nginx.conf` не настроены: `Strict-Transport-Security` (HSTS),
-`X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy`.
-
-Не критично для визитки, но рекомендованный минимум для production —
-добавить в HTTPS server block:
-```nginx
-add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-```
-
----
-
-## Состояние сервера (snapshot июнь 2026)
+Временный сервер после падения Beget. План: вернуться на Beget и
+восстановить там S3.
 
 ### Базовое
 
 | Параметр | Значение |
 |---|---|
-| IP | `155.212.133.140` |
-| OS | Ubuntu 24.04.4 LTS |
-| Путь проекта | `/var/www/tee-su` |
-| RAM | 3.8 GB |
-| Disk | 19 GB |
+| Провайдер | Timeweb Cloud, сервер "Wild Amalthea" |
+| IP | `5.42.119.135` |
+| Hostname | `msk-1-vm-4z1u` |
+| OS | Ubuntu 26.04.1 LTS |
+| CPU / RAM / Swap | 1 vCPU 3.3 ГГц / 1.9 ГБ / 2 ГБ (`/swapfile`) |
+| Disk | 28 ГБ |
 | Timezone | UTC |
-| Uptime ребута | 90+ дней (нужен после очередных апдейтов) |
+| Путь проекта | `/var/www/tee-su` |
+| Docker / Compose | 29.9 / 5.7 |
+| Certbot | 4.0 |
+
+### DNS
+
+A-записи `tee.su`, `mrtorres.ru`, `xab.su` и их `www.` → `5.42.119.135`.
+DNS-зона управляется в панели Beget.
 
 ### Безопасность
 
-- ✅ **fail2ban active** — защита от SSH brute force
-- ⚠️ **UFW inactive** — нет файрвола (полагаемся на VPS-провайдера)
-- ⚠️ **SSH root login** — открыт (см. `~/.ssh/authorized_keys` для ключей деплоя)
-- ✅ **GitHub Actions deploy key** — отдельный ed25519, видно как
-  `github-actions-deploy` в `authorized_keys`
+- ✅ **UFW** — открыты только 22, 80, 443
+- ✅ **fail2ban** — защита SSH от перебора
+- ⚠️ **SSH root** — вход по паролю (выдан Timeweb) и по ключу
+- ✅ **Deploy-ключ GitHub Actions** — `~/.ssh/github_deploy`, в
+  `authorized_keys` с комментарием `github-actions-deploy`
 
-### Ресурсы
+### Docker
 
-- БД (`tee-su_pgdata` volume) — ~47 MB
-- Docker images — ~8.4 GB (active)
-- Docker build cache — может расти; чистить через `docker builder prune -af`
-- **Swap отсутствует** — добавлять только если будет OOM
+- Named volume `tee-su_pgdata` — **вся база**
+- Bind mounts:
+  - `/etc/letsencrypt` → nginx (read-only) — серты
+  - `/var/www/certbot` → nginx — webroot для ACME challenge
+  - `/var/www/tee-su/nginx/nginx.conf` → nginx — конфиг
+  - `/var/www/tee-su/backend/uploads` → backend `/app/uploads` — медиа
+- `/var/www/tee-su/backend/.env` — подключается через `env_file`
 
-### Docker volumes (named)
+### Периодические задачи
 
-- `tee-su_pgdata` — **ВСЯ БАЗА** (контент сайта, SeoMeta, профиль, ...)
-- `tee-su_certbot-webroot` — **orphan**, можно удалить (перешли на bind mount)
-
-### Bind mounts
-
-- `/etc/letsencrypt` → nginx (read-only) — серты
-- `/var/www/certbot` → nginx — webroot для ACME challenge
-- `/var/www/tee-su/nginx/nginx.conf` → nginx — конфиг
-- `/var/www/tee-su/backend/.env` → backend — переменные окружения
-- `/var/www/tee-su/backend/uploads` → backend `/app/uploads` — медиа (local driver)
-
-### Cron tasks
-
-```cron
-# Обновление SSL-сертификатов (webroot mode), 3:00 UTC
-0 3 * * * certbot renew --quiet && \
-  docker compose -f /var/www/tee-su/docker-compose.prod.yml restart nginx
-
-# Бэкап БД ежедневно в 4:00 UTC, ротация 14 дней
-0 4 * * * docker exec tee-su-db pg_dump -U postgres teesu | \
-  gzip > /root/backups/teesu-$(date +\%Y\%m\%d).sql.gz && \
-  find /root/backups -name "teesu-*.sql.gz" -mtime +14 -delete
-```
-
-**Что бы стоило добавить ещё:**
-- Логротейт docker-логов (могут расти)
-- Off-site копия бэкапов (S3, rsync на другой сервер) — сейчас бэкапы
-  лежат на том же VPS, если диск умрёт — потеряются вместе с БД
-
-### Бэкапы БД
-
-- **Где лежат:** `/root/backups/teesu-YYYYMMDD.sql.gz`
-- **Что внутри:** полный `pg_dump` БД `teesu` (SeoMeta, Profile, Skills,
-  SkillGroups, Education, Images со ссылками на S3)
-- **Ротация:** хранятся 14 дней, старше — удаляются автоматически
-- **Размер:** ~10-50 КБ в gzip (БД маленькая)
-- **Тестирование восстановления:** периодически делать на dev/staging:
-  ```bash
-  gunzip -c teesu-YYYYMMDD.sql.gz | docker exec -i tee-su-db psql -U postgres teesu
+- **SSL** — `certbot.timer` (systemd) + хук
+  `/etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh`.
+  Серты действительны до 11.02.2027.
+- **Бэкап БД** — cron root:
+  ```cron
+  0 4 * * * docker exec tee-su-db pg_dump -U postgres teesu | gzip > /root/backups/teesu-$(date +\%Y\%m\%d).sql.gz && find /root/backups -name "teesu-*.sql.gz" -mtime +14 -delete
   ```
-- ⚠️ **Off-site копий нет** — бэкапы на том же сервере, что и БД
+  Ротация 14 дней. ⚠️ Только на этом же сервере (см. техдолг).
 
 ---
 
-## Restoring on new VPS (disaster recovery)
+## Disaster recovery — переезд на новый сервер
 
-Если VPS умер — порядок восстановления:
+Полная процедура с командами — [README.md → Production Deployment](README.md#production-deployment).
+Проверена на практике 13.11.2026 (Beget → Timeweb). Порядок и то, что легко забыть:
 
-1. **Поднять Ubuntu 24.04**, поставить Docker:
-   ```bash
-   curl -fsSL https://get.docker.com | sh
-   apt install -y certbot fail2ban
-   ```
-
-2. **Получить код:**
-   ```bash
-   git clone https://github.com/i-tee/tee-su /var/www/tee-su
-   cd /var/www/tee-su
-   ```
-
-3. **Восстановить `.env`** (из бэкапа или пересоздать):
-   ```bash
-   cp backend/.env.example backend/.env
-   nano backend/.env   # заполнить DB creds, S3 keys, ADMIN_PASSWORD
-   ```
-
-4. **Восстановить контент БД.** Если есть свежий pg_dump:
-   ```bash
-   docker compose -f docker-compose.prod.yml up -d db
-   gunzip -c teesu-YYYYMMDD.sql.gz | docker exec -i tee-su-db psql -U postgres teesu
-   ```
-   Если нет — поднять backend (создаст схему) и применить сид:
-   ```bash
-   docker exec -i tee-su-db psql -U postgres -d teesu < backend/seed/restore-2026-11.sql
-   ```
-
-4a. **Скопировать медиа** (не в git):
-   ```bash
-   scp backend/uploads/*.jpg root@<new-ip>:/var/www/tee-su/backend/uploads/
-   ```
-
-5. **Сменить DNS** A-записи tee.su / mrtorres.ru / xab.su на новый IP.
-
-6. **Выпустить серты заново** (webroot):
-   ```bash
-   mkdir -p /var/www/certbot
-   bash deploy.sh   # поднимет nginx без SSL не получится — см. ниже
-   ```
-
-   На самом деле нужен порядок:
-   - Сначала временно убрать HTTPS блоки из nginx.conf (оставить только HTTP)
-   - `docker compose up -d nginx frontend backend db`
-   - `certbot certonly --webroot -w /var/www/certbot -d tee.su -d www.tee.su -d mrtorres.ru -d www.mrtorres.ru -d xab.su -d www.xab.su --non-interactive --agree-tos -m web@tee.su`
-   - Вернуть полный nginx.conf
-   - `docker compose restart nginx`
-
-7. **GitHub Actions:** обновить секреты репозитория (`SSH_HOST`, ключи).
-
-8. **Cron** для renewal — добавить заново (см. выше).
+1. **DNS** — сменить A-записи всех трёх доменов (+`www.`) заранее,
+   распространение занимает время. Проверка: `nslookup tee.su 1.1.1.1`.
+2. **Сервер** — пакеты, Docker, swap, UFW, клон репо (README, шаг 1).
+3. **Секреты и медиа** — `scp` для `backend/.env` и `backend/uploads/*`.
+   В серверном `.env` выставить `ADMIN_AUTH_ENABLED=true`.
+4. **SSL** — standalone ДО первого деплоя (README, шаг 3).
+5. **Деплой + контент** — `deploy.sh`, затем свежий бэкап
+   (`gunzip ... | psql`), а если его нет — сид `restore-2026-11.sql`.
+6. **SSL обновление** — `certbot reconfigure` на webroot + хук рестарта
+   nginx + `certbot renew --dry-run` (README, шаг 5).
+7. **Бэкапы** — cron (README, шаг 6).
+8. **GitHub Actions** — новый deploy-ключ, обновить секрет
+   `SSH_PRIVATE_KEY`. `SSH_HOST=tee.su` менять не нужно.
+9. **Обновить этот файл** — раздел "Состояние сервера".

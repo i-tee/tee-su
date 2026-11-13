@@ -184,7 +184,8 @@ import { SeoMeta } from '../seo-meta/seo-meta.entity';
                         edit: true,
                         filter: false,
                       },
-                      description: 'Загрузить в S3 после сохранения',
+                      description:
+                        'Загрузить в S3 после сохранения (работает только при STORAGE_DRIVER=s3)',
                     },
                     description: { type: 'textarea' },
                   },

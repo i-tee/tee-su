@@ -14,10 +14,10 @@ export class ProfileService implements OnModuleInit {
     const count = await this.repo.count();
     if (count === 0) {
       await this.repo.save({
-        name: 'Evgeny Tarasov',
+        name: 'Eugene Tarasov',
         title: 'Fullstack WEB/AI Developer, DevOps Engineer',
         city: 'Remote · Worldwide',
-        experience: 16,
+        experience_start: new Date('2010-01-01'),
         tagline: '',
         heroText: '',
         statsProjects: 0,

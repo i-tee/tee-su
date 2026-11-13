@@ -2,6 +2,8 @@
 
 Personal portfolio site — [tee.su](https://tee.su). Full-stack web application built on a modern, production-ready stack.
 
+> Architecture decisions, gotchas, incidents and the server runbook live in [CLAUDE.md](CLAUDE.md).
+
 ---
 
 ## Stack
@@ -29,10 +31,10 @@ Personal portfolio site — [tee.su](https://tee.su). Full-stack web application
 | Technology | Purpose |
 |---|---|
 | Docker + Docker Compose | Containerized development & deployment |
-| Nginx | Reverse proxy + SSL termination |
-| Let's Encrypt | HTTPS certificates |
+| Nginx (container) | Reverse proxy + SSL termination |
+| Let's Encrypt | HTTPS certificates (webroot renewal) |
 | GitHub Actions | Auto-deploy on push to `main` |
-| Beget S3 (S3-compatible) | Cloud object storage for media |
+| Local disk / S3-compatible | Media storage, switchable via `STORAGE_DRIVER` |
 
 ---
 
@@ -41,12 +43,11 @@ Personal portfolio site — [tee.su](https://tee.su). Full-stack web application
 - **Profile** — personal info entity, served via REST API
 - **Skills** — skill entries organized into groups
 - **Education** — education history entries
-- **Images** — media management with dual-storage support:
-  - Local filesystem upload via AdminJS panel
-  - Optional one-click migration to S3 — upload, get public URL, update DB, remove local file automatically
+- **Images** — uploaded via AdminJS; stored on local disk or in S3 (see [Media storage](#media-storage))
 - **SEO** — fully dynamic SEO managed from the admin panel (see below)
+- **Analytics** — Yandex.Metrika and Google Analytics, IDs managed from the admin panel
 - **Admin Panel** — full CRUD via AdminJS at `/admin`
-- **i18n ready** — Russian locale included, easy to extend
+- **i18n** — English and Russian locales
 - **Dark/light theme** — saved in cookie, applied before first render (no flash)
 
 ---
@@ -62,7 +63,7 @@ All SEO settings are stored in the database and managed via the admin panel — 
 | Meta tags | `title`, `description`, `keywords`, `author`, `robots`, `theme-color` |
 | Open Graph | `og:title`, `og:description`, `og:image` (1200×630), `og:type`, `og:locale`, `og:site_name`, `og:url` |
 | Twitter Card | `summary_large_image`, `twitter:site`, `twitter:creator` |
-| Schema.org JSON-LD | `Person` — name, jobTitle, url, image, sameAs (GitHub, Telegram, email) |
+| Schema.org JSON-LD | `Person` — name, jobTitle, url, email, image (`ImageObject`), sameAs |
 | Canonical URL | Set from DB, injected via Next.js `alternates` |
 | Favicon set | `.ico`, `.svg`, `96×96 png`, `apple-touch-icon 180×180` |
 | Web App Manifest | PWA-ready — 192×192 and 512×512 maskable icons |
@@ -71,21 +72,7 @@ All SEO settings are stored in the database and managed via the admin panel — 
 
 ### How it works
 
-The backend exposes `GET /seo-meta` which returns all SEO fields. Next.js fetches it server-side at build/request time (revalidated every hour) and injects everything into `<head>` automatically.
-
-JSON-LD is rendered directly in `layout.tsx`:
-
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Person",
-  "name": "...",
-  "jobTitle": "...",
-  ...
-}
-</script>
-```
+The backend exposes `GET /seo-meta` which returns all SEO fields. Next.js fetches it server-side (cached for one hour, reset on every deploy) and injects everything into `<head>`. JSON-LD is rendered in `frontend/src/app/layout.tsx`.
 
 ---
 
@@ -93,47 +80,31 @@ JSON-LD is rendered directly in `layout.tsx`:
 
 ```
 tee-su/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml       # GitHub Actions auto-deploy
+├── .github/workflows/deploy.yml   # GitHub Actions auto-deploy
 │
-├── frontend/                # Next.js app (App Router)
-│   ├── public/
-│   │   ├── favicon.ico
-│   │   ├── favicon.svg
-│   │   ├── favicon-96x96.png
-│   │   ├── apple-touch-icon.png
-│   │   ├── web-app-manifest-192x192.png
-│   │   ├── web-app-manifest-512x512.png
-│   │   └── site.webmanifest
+├── frontend/                      # Next.js app (App Router)
+│   ├── public/                    # favicons, manifest, og-image
+│   ├── next.config.ts             # /uploads rewrite to the backend
 │   └── src/
-│       ├── app/
-│       │   ├── layout.tsx   # Root layout + JSON-LD injection
-│       │   ├── metadata.ts  # Builds Next.js Metadata from API
-│       │   ├── page.tsx
-│       │   ├── robots.ts    # Generates /robots.txt
-│       │   └── sitemap.ts   # Generates /sitemap.xml
+│       ├── app/                   # layout (JSON-LD), metadata, robots, sitemap
 │       ├── components/
-│       ├── services/
-│       │   └── pageService.ts  # All API calls
-│       └── locales/         # i18n translation files
+│       ├── services/pageService.ts  # All API calls
+│       └── locales/               # en / ru texts
 │
-├── backend/                 # NestJS app
+├── backend/                       # NestJS app
+│   ├── seed/                      # Content restore seed (see CLAUDE.md)
+│   ├── uploads/                   # Local media storage (not in git)
 │   └── src/
-│       ├── admin/           # AdminJS panel configuration
-│       ├── images/          # Image entity + S3 upload service
-│       ├── seo-meta/        # SEO settings entity + API
-│       ├── profile/
-│       ├── skills/
-│       ├── skill-groups/
-│       └── education/
+│       ├── admin/                 # AdminJS panel configuration
+│       ├── images/                # Image entity, S3 upload service
+│       ├── seo-meta/              # SEO settings entity + API
+│       ├── profile/, skills/, skill-groups/, education/
 │
-├── nginx/
-│   └── nginx.conf           # Reverse proxy + HTTPS
-├── docker-compose.yml       # Development
-├── docker-compose.prod.yml  # Production
-├── deploy.sh                # One-command deploy script
-└── ssl-init.sh              # One-time SSL setup script
+├── nginx/nginx.conf               # Reverse proxy + HTTPS + redirect domains
+├── docker-compose.yml             # Development
+├── docker-compose.prod.yml        # Production
+├── deploy.sh                      # Deploy script (called by GitHub Actions)
+└── CLAUDE.md                      # Architecture notes & runbook
 ```
 
 ---
@@ -151,30 +122,39 @@ git clone <repo-url>
 cd tee-su
 cp backend/.env.example backend/.env
 # fill in backend/.env
-docker compose up
+docker compose up -d
 ```
 
 | Service | URL |
 |---|---|
-| Frontend | <http://localhost:3000> |
+| Frontend | <http://localhost:3100> |
 | Backend API | <http://localhost:4000> |
 | Admin Panel | <http://localhost:4000/admin> |
 
+Fill the database with content:
+
+```bash
+docker exec -i tee-su-db psql -U postgres -d teesu < backend/seed/restore-2026-11.sql
+```
+
 ### Environment
 
-Required variables in `backend/.env`:
+Variables in `backend/.env`:
 
 ```env
 # Database
 DATABASE_URL=postgresql://postgres:postgres@db:5432/teesu
 
-# Admin panel
+# Admin panel — must be true in production
 ADMIN_AUTH_ENABLED=false
 ADMIN_EMAIL=
 ADMIN_PASSWORD=
 ADMIN_COOKIE_SECRET=
 
-# S3 Storage (optional — required only for S3 image upload)
+# Media storage: local | s3
+STORAGE_DRIVER=local
+
+# S3 (used only when STORAGE_DRIVER=s3)
 S3_ENDPOINT=
 S3_BUCKET=
 S3_ACCESS_KEY=
@@ -185,19 +165,14 @@ S3_PUBLIC_URL=
 
 ---
 
-## S3 Image Upload
+## Media storage
 
-Images can be stored locally or pushed to any S3-compatible storage (AWS S3, Beget, MinIO, etc.).
+Images are uploaded through the admin panel. Where they end up depends on `STORAGE_DRIVER`:
 
-In the admin panel, when creating or editing an image, check **Save To S3**. After the file is saved locally, the backend will automatically:
+- **`local`** (default) — files stay in `backend/uploads/` and are served at `/uploads/<file>`.
+- **`s3`** — when **Save To S3** is checked, the backend uploads the file to the configured S3-compatible bucket, stores the public URL in the database and deletes the local copy.
 
-1. Read the file from local storage
-2. Upload it to the configured S3 bucket
-3. Retrieve the public URL
-4. Update the database record
-5. Delete the local file
-
-All steps are logged via NestJS Logger for easy debugging.
+Records that already hold a full URL keep working with either driver.
 
 ---
 
@@ -214,6 +189,7 @@ Base URL: `http://localhost:4000`
 | GET | `/images` | List all images |
 | GET | `/images/:id` | Get image by ID |
 | GET | `/seo-meta` | Get all SEO settings |
+| GET | `/uploads/:file` | Local media files |
 
 ---
 
@@ -221,139 +197,105 @@ Base URL: `http://localhost:4000`
 
 ### Server requirements
 
-- 1 CPU / 1 GB RAM minimum (2 GB RAM recommended)
+- 1 CPU / 2 GB RAM + 2 GB swap
 - 20 GB disk
-- Ubuntu 22.04+
-- Docker installed
+- Ubuntu 24.04+
 - Domain A-records pointed to the server IP
-
-> **Note:** On 1 GB RAM servers, add swap before deploying:
->
-> ```bash
-> fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
-> echo '/swapfile none swap sw 0 0' >> /etc/fstab
-> ```
-
----
 
 ### Step 1 — Prepare the server
 
 ```bash
+apt update && apt upgrade -y
+apt install -y git certbot fail2ban ufw
 curl -fsSL https://get.docker.com | sh
-```
 
----
+fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
-### Step 2 — Clone and configure
-
-```bash
+ufw allow 22/tcp && ufw allow 80/tcp && ufw allow 443/tcp && ufw --force enable
+mkdir -p /var/www/certbot /root/backups
 git clone <repo-url> /var/www/tee-su
-cd /var/www/tee-su
-cp backend/.env.example backend/.env
-nano backend/.env
 ```
 
----
+### Step 2 — Secrets and media
 
-### Step 3 — First deploy
+`backend/.env` and `backend/uploads/` are not in git. Copy them from your machine:
 
 ```bash
-bash deploy.sh
+scp backend/.env root@<server>:/var/www/tee-su/backend/.env
+scp backend/uploads/*.jpg root@<server>:/var/www/tee-su/backend/uploads/
 ```
 
-Verify the site is working:
+Set `ADMIN_AUTH_ENABLED=true` in the server copy.
 
-| Service | URL |
-|---|---|
-| Frontend | <http://yourdomain.com> |
-| Admin Panel | <http://yourdomain.com/admin> |
+### Step 3 — SSL certificates
 
----
-
-### Step 4 — Enable HTTPS
-
-> Run once, after the site is accessible over HTTP.
+Nginx can't start without certificates, so issue them before the first deploy while port 80 is still free:
 
 ```bash
-apt install -y certbot
-bash ssl-init.sh
+for d in tee.su mrtorres.ru xab.su; do
+  certbot certonly --standalone -d $d -d www.$d --non-interactive --agree-tos -m web@tee.su
+done
 ```
 
-The script:
+### Step 4 — Deploy and seed
 
-1. Stops nginx temporarily to free port 80
-2. Obtains a Let's Encrypt certificate for your domain
-3. Restarts nginx — HTTP redirects to HTTPS automatically
-
----
+```bash
+cd /var/www/tee-su && bash deploy.sh
+docker exec -i tee-su-db psql -U postgres -d teesu < backend/seed/restore-2026-11.sql
+docker compose -f docker-compose.prod.yml up -d --force-recreate frontend
+```
 
 ### Step 5 — SSL auto-renewal
 
+Switch renewal to webroot (nginx keeps port 80 busy) and restart nginx after each renewal. The certbot package already ships a systemd timer:
+
 ```bash
-crontab -e
+for d in tee.su mrtorres.ru xab.su; do
+  certbot reconfigure --cert-name $d --webroot -w /var/www/certbot -n
+done
+
+cat > /etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh <<'EOF'
+#!/bin/sh
+docker compose -f /var/www/tee-su/docker-compose.prod.yml restart nginx
+EOF
+chmod +x /etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh
+
+certbot renew --dry-run
 ```
 
-Add:
+### Step 6 — Database backups
 
+```bash
+(crontab -l 2>/dev/null; echo '0 4 * * * docker exec tee-su-db pg_dump -U postgres teesu | gzip > /root/backups/teesu-$(date +\%Y\%m\%d).sql.gz && find /root/backups -name "teesu-*.sql.gz" -mtime +14 -delete') | crontab -
 ```
-0 3 * * * certbot renew --quiet && docker compose -f /var/www/tee-su/docker-compose.prod.yml restart nginx
-```
 
----
+### Step 7 — Auto-deploy via GitHub Actions
 
-### Step 6 — Auto-deploy via GitHub Actions
-
-On every `git push main`, GitHub Actions SSHs into the server and runs `deploy.sh` automatically.
-
-#### Setup
-
-1. Generate a deploy SSH key on the server:
+On every push to `main`, GitHub Actions SSHs into the server and runs `deploy.sh`.
 
 ```bash
 ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_deploy -N ""
 cat ~/.ssh/github_deploy.pub >> ~/.ssh/authorized_keys
+cat ~/.ssh/github_deploy
 ```
 
-2. Add 4 secrets to the GitHub repo (`Settings → Secrets and variables → Actions`):
+Add 4 secrets to the GitHub repo (`Settings → Secrets and variables → Actions`):
 
 | Secret | Value |
 |---|---|
-| `SSH_HOST` | your domain or server IP |
-| `SSH_USER` | `root` (or your user) |
+| `SSH_HOST` | your domain (survives a server move) |
+| `SSH_USER` | `root` |
 | `SSH_PRIVATE_KEY` | contents of `~/.ssh/github_deploy` |
 | `PROJECT_PATH` | `/var/www/tee-su` |
-
-The workflow file is at `.github/workflows/deploy.yml`.
-
----
-
-### Subsequent deploys
-
-Manual:
-```bash
-bash deploy.sh
-```
-
-Or just `git push main` — GitHub Actions handles the rest.
-
----
 
 ### Useful commands
 
 ```bash
-# View all logs
-docker compose -f docker-compose.prod.yml logs -f
-
-# View logs for a specific service
+docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs -f backend
-
-# Restart a specific service
 docker compose -f docker-compose.prod.yml restart backend
-
-# Stop everything
-docker compose -f docker-compose.prod.yml down
-
-# Check disk and image usage
+certbot certificates
 docker system df
 ```
 
@@ -378,8 +320,6 @@ docker system df
 
 See: `backend/scripts/pre-bundle.js`, `backend/Dockerfile`, `docker-compose.prod.yml`
 
----
-
 ### Next.js Image Optimization — 400 Bad Request for external URLs
 
 **Problem:** `/_next/image?url=https://...` returns 400 in production.
@@ -388,16 +328,10 @@ See: `backend/scripts/pre-bundle.js`, `backend/Dockerfile`, `docker-compose.prod
 
 **Solution:** Added `COPY --from=builder /app/next.config.ts ./next.config.ts` to the runner stage in `frontend/Dockerfile`.
 
----
-
-### Docker build OOM on 1 GB RAM
+### Docker build OOM on a 2 GB server
 
 **Problem:** `nest build` crashes with `JavaScript heap out of memory` during Docker build.
 
-**Solution:**
+**Root cause:** `tsc` with AdminJS types needs more than 1 GB of heap; Node's default limit is about half of the RAM.
 
-- Add 2 GB swap (see server requirements above)
-- Switch NestJS compiler to SWC: set `"builder": "swc"` in `nest-cli.json`
-- Install SWC: `npm install --save-dev @swc/cli @swc/core`
-
-SWC is a Rust-based TypeScript compiler — 20x faster than `tsc` and uses ~10x less memory.
+**Solution:** `backend/Dockerfile` raises the limit for the build step (`NODE_OPTIONS=--max-old-space-size=1536`); the 2 GB swap covers the rest.

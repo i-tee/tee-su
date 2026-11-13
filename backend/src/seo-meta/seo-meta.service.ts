@@ -20,7 +20,7 @@ export class SeoMetaService implements OnModuleInit {
     if (count === 0) {
       await this.repo.save(
         this.repo.create({
-          title: 'Eugene Tarasov — Fullstack Developer',
+          title: 'Eugene Tarasov — Fullstack Web/AI Developer',
           titleTemplate: '%s | tee.su',
           description:
             'Fullstack developer with 16+ years of experience. PHP, Laravel, NestJS, Vue.js, React, Docker. Available for new projects.',
@@ -30,7 +30,7 @@ export class SeoMetaService implements OnModuleInit {
           author: 'Eugene Tarasov',
           ogTitle: '',
           ogDescription: '',
-          ogImage: 'https://tee.su/og-image.jpg',
+          ogImage: 'https://tee.su/uploads/black.jpg',
           ogImageAlt: 'Eugene Tarasov — Fullstack Developer',
           ogType: 'website',
           ogLocale: 'en_US',
@@ -41,11 +41,11 @@ export class SeoMetaService implements OnModuleInit {
           personName: 'Eugene Tarasov',
           personJobTitle: 'Fullstack Developer',
           personUrl: 'https://tee.su',
-          personImage: 'https://tee.su/i2026b.jpg',
+          personImage: 'https://tee.su/uploads/black.jpg',
           personSameAs: JSON.stringify([
             'https://github.com/i-tee',
             'https://t.me/tee_su',
-            'mailto:me@tee.su',
+            'mailto:web@tee.su',
           ]),
           robots: 'index, follow',
           themeColor: '#1a1612',
