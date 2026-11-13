@@ -3,7 +3,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build
+# tsc с типами AdminJS съедает >1 ГБ кучи; дефолтный лимит Node (~половина RAM)
+# на сервере с 2 ГБ не хватает. Недостающее добирается из swap.
+RUN NODE_OPTIONS=--max-old-space-size=1536 npm run build
 # Pre-generate AdminJS components bundle during build.
 # mkdir uploads because LocalProvider checks the directory exists at init time.
 RUN node scripts/pre-bundle.js
