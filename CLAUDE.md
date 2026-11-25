@@ -9,6 +9,29 @@
 
 ---
 
+## Правила работы агента
+
+**Git — только владелец.** Агенту можно только читать: `git status`, `log`,
+`diff`, `show`, `blame`. Всё, что меняет репозиторий, рабочее дерево или
+GitHub, делает владелец:
+- `add`, `commit`, `push`, `merge`, `rebase`, `reset`;
+- создание и смена веток, теги;
+- `checkout`/`restore`/`stash` файлов;
+- PR на GitHub.
+
+Слияние `develop` в `main` и пуш в `main` — это выкат на прод (автодеплой),
+его делает только владелец.
+
+После завершённого этапа агент даёт владельцу перечень изменённых файлов и
+текст коммита: Conventional Commits, по-английски, одной строкой, без
+`Co-Authored-By` и других подписей инструмента.
+
+Почему: владелец видит каждый диф и один отвечает за историю. Раньше агент
+коммитил и сливал в `main` по разовым просьбам, и одно такое слияние
+выкатило изменения на прод.
+
+---
+
 ## Что это вообще
 
 Персональный сайт-визитка [tee.su](https://tee.su) — Eugene Tarasov,
@@ -193,8 +216,8 @@ Email из `personSameAs` извлекается в отдельное поле 
 bind mount `./backend/uploads:/app/uploads`, иначе `--force-recreate`
 стирал бы их. На новом сервере файлы копировать вручную (`scp`).
 
-Сейчас (ноябрь 2026) работаем на `local`. S3 вернём после переезда обратно
-на Beget.
+Сейчас (ноябрь 2026) работаем на `local`. План: поднять S3 на Beget
+(облако на `cloud.tee.su`) и переключить `STORAGE_DRIVER=s3` с новыми ключами.
 
 ---
 
@@ -263,7 +286,8 @@ docker compose -f docker-compose.prod.yml up -d --force-recreate frontend
 - `SSH_PRIVATE_KEY` — содержимое `~/.ssh/github_deploy` с сервера
 - `PROJECT_PATH` — `/var/www/tee-su`
 
-Рабочая ветка — `develop`, в `main` мержим перед выкаткой. Перед мержем
+Рабочая ветка — `develop`, в `main` перед выкаткой мержит и пушит владелец
+(см. "Правила работы агента"). Перед мержем
 всегда `git pull origin main`: на GitHub в `main` бывают merge-коммиты от PR.
 
 ### `deploy.sh` на сервере
@@ -423,6 +447,14 @@ Node — около половины RAM. Решение в `backend/Dockerfile`
 сервере. Swap сам по себе не помогает — упираемся в лимит кучи V8, а не
 в память системы.
 
+### Диск 15 ГБ и кеш сборки Docker
+
+После первой сборки на Beget занято 11 из 14 ГБ (77%). `deploy.sh` чистит
+только висячие образы (`docker image prune -f`), кеш сборки копится с
+каждым деплоем. Проверка: `docker system df`. Освободить:
+`docker builder prune -af` (следующая сборка пойдёт с нуля, дольше). Если
+место кончается регулярно — увеличить диск в панели Beget (только вверх).
+
 ### Next.js Image Optimization 400
 
 Если `next.config.ts` не скопирован в runner-стейдж frontend Dockerfile,
@@ -474,7 +506,8 @@ docker nginx), падало молча, серт истёк. mrtorres.ru и xab.
   `frontend/.next/dev/cache/images/`: кеш Next Image-оптимизатора хранит
   уменьшенные копии всех когда-либо показанных картинок.
 - **S3** — отключён переключателем `STORAGE_DRIVER=local`.
-- **Хостинг** — временно Timeweb (см. "Состояние сервера").
+- **Хостинг** — 13.11.2026 временно Timeweb, 25.11.2026 обратно на новый
+  VDS Beget (см. "Состояние сервера" и "Disaster recovery").
 
 Урок: бэкапы на том же сервере, что и БД, — это не бэкапы.
 
@@ -485,11 +518,16 @@ docker nginx), падало молча, серт истёк. mrtorres.ru и xab.
 Зафиксировано, чтобы помнить: это **известный плохой паттерн**, а не
 "так задумано".
 
-### Нет off-site бэкапов
+### Нет бэкапов БД
 
-Бэкапы в `/root/backups/` лежат на том же VPS. Если сервер умрёт — умрут
-вместе с БД (уже случилось в ноябре 2026). Нужна копия вне сервера: S3
-другого провайдера или rsync на другую машину.
+На сервере Beget (с 25.11.2026) cron бэкапа **не настроен** — копий базы
+нет ни локально, ни вне сервера. Единственный снимок — дамп переезда
+`/root/backups/teesu-move.sql.gz` на том же сервере.
+
+План владельца: cron с отправкой дампа в S3 Beget, вместе с облаком на
+`cloud.tee.su`. Локальная часть — строка из README, шаг 6; к ней добавится
+выгрузка в S3. Копия на том же сервере, что и БД, от смерти сервера не
+спасает (ноябрь 2026).
 
 ### `synchronize: true` в TypeORM
 
@@ -562,6 +600,8 @@ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
 ## Полезные команды на проде
 
+Запускает владелец на сервере — агент на сервер не ходит.
+
 ```bash
 # Статус контейнеров
 docker compose -f /var/www/tee-su/docker-compose.prod.yml ps
@@ -594,38 +634,44 @@ gunzip -c /root/backups/teesu-YYYYMMDD.sql.gz | docker exec -i tee-su-db psql -U
 
 ---
 
-## Состояние сервера (snapshot 13.11.2026)
+## Состояние сервера (snapshot 25.11.2026)
 
-Временный сервер после падения Beget. План: вернуться на Beget и
-восстановить там S3.
+VDS на Beget, переехали с временного Timeweb 25.11.2026.
 
 ### Базовое
 
 | Параметр | Значение |
 |---|---|
-| Провайдер | Timeweb Cloud, сервер "Wild Amalthea" |
-| IP | `5.42.119.135` |
-| Hostname | `msk-1-vm-4z1u` |
-| OS | Ubuntu 26.04.1 LTS |
-| CPU / RAM / Swap | 1 vCPU 3.3 ГГц / 1.9 ГБ / 2 ГБ (`/swapfile`) |
-| Disk | 28 ГБ |
+| Провайдер | Beget, VDS "Фиксированная": 1 ядро / 2 ГБ / 15 ГБ NVMe |
+| IP | `45.9.43.241` |
+| Hostname | `xiytrpbiqf` |
+| OS | Ubuntu 24.04.5 LTS |
+| CPU / RAM / Swap | 1 vCPU 3–3.3 ГГц / 1.9 ГБ / 2 ГБ (`/swapfile`) |
+| Disk | 14 ГБ, занято 77% после первой сборки (см. "Диск 15 ГБ") |
 | Timezone | UTC |
 | Путь проекта | `/var/www/tee-su` |
-| Docker / Compose | 29.9 / 5.7 |
-| Certbot | 4.0 |
+| Docker / Compose | 29.10 / 5.8 |
+| Certbot | 2.9 |
+
+После установки обновлений система просит перезагрузку
+(`System restart required`). Контейнеры с `restart: unless-stopped`
+поднимаются сами, swap прописан в `/etc/fstab`.
 
 ### DNS
 
-A-записи `tee.su`, `mrtorres.ru`, `xab.su` и их `www.` → `5.42.119.135`.
-DNS-зона управляется в панели Beget.
+A-записи `tee.su`, `mrtorres.ru`, `xab.su` и их `www.` → `45.9.43.241`.
+Только A-записи, без CNAME. DNS-зона управляется в панели Beget, TTL 600.
 
 ### Безопасность
 
 - ✅ **UFW** — открыты только 22, 80, 443
 - ✅ **fail2ban** — защита SSH от перебора
-- ⚠️ **SSH root** — вход по паролю (выдан Timeweb) и по ключу
-- ✅ **Deploy-ключ GitHub Actions** — `~/.ssh/github_deploy`, в
-  `authorized_keys` с комментарием `github-actions-deploy`
+- ⚠️ **SSH root** — вход по ключу владельца; включён ли вход по паролю —
+  не проверено (`PasswordAuthentication` в `/etc/ssh/sshd_config*`)
+- ✅ **Deploy-ключ GitHub Actions** — перенесён с Timeweb: на сервере только
+  публичная часть в `authorized_keys` (комментарий `github-actions-deploy`),
+  приватная — только в секрете `SSH_PRIVATE_KEY`. Для нового ключа —
+  README, шаг 7.
 
 ### Docker
 
@@ -641,18 +687,43 @@ DNS-зона управляется в панели Beget.
 
 - **SSL** — `certbot.timer` (systemd) + хук
   `/etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh`.
-  Серты действительны до 11.02.2027.
-- **Бэкап БД** — cron root:
-  ```cron
-  0 4 * * * docker exec tee-su-db pg_dump -U postgres teesu | gzip > /root/backups/teesu-$(date +\%Y\%m\%d).sql.gz && find /root/backups -name "teesu-*.sql.gz" -mtime +14 -delete
-  ```
-  Ротация 14 дней. ⚠️ Только на этом же сервере (см. техдолг).
+  Серты действительны до 11.02.2027, `certbot renew --dry-run` на Beget
+  прошёл 25.11.2026.
+- **Бэкап БД** — ⚠️ **нет**, crontab root пуст (см. техдолг "Нет бэкапов
+  БД"). Ждёт S3 на Beget.
+
+---
+
+## Переезд со старого сервера без простоя
+
+Когда старый сервер жив. Проверено 25.11.2026 (Timeweb → Beget): сайт не
+падал ни на минуту, сертификаты не перевыпускались, секреты GitHub не
+менялись. Команды — [README.md → Moving to another server](README.md#moving-to-another-server).
+
+1. **Новый сервер** — README, шаг 1.
+2. **Старый сервер** — свежий `pg_dump` + один архив с путями от корня:
+   `/etc/letsencrypt` (серты, renewal-конфиги с webroot, хук), `backend/.env`,
+   `backend/uploads`, дамп, `~/.ssh/github_deploy.pub`. Перекинуть на новый.
+   `scp` сервер→сервер требует пароль нового; если он не проходит — через
+   машину владельца по ключу.
+3. **Новый сервер** — распаковать в `/`, ключ деплоя в `authorized_keys`,
+   поднять **только** `db`, залить дамп, потом `deploy.sh`. Порядок важен:
+   бэкенд при старте создаёт таблицы и дефолтные записи, дамп с ними
+   конфликтует.
+4. **Проверка до DNS** — `curl --resolve tee.su:443:<новый IP> https://tee.su/`
+   и так по всем доменам.
+5. **DNS** — шесть A-записей на новый IP. От дампа до смены DNS не правят
+   админку и не пушат в `main` (правки потеряются / деплой уйдёт на старый).
+6. **После DNS** — `certbot renew --dry-run`, cron бэкапа, обновить этот файл.
+
+Архив содержит секреты и закрытые ключи сертификатов — после переезда
+удалить все его копии.
 
 ---
 
 ## Disaster recovery — переезд на новый сервер
 
-Полная процедура с командами — [README.md → Production Deployment](README.md#production-deployment).
+Когда старый сервер мёртв. Полная процедура с командами — [README.md → Production Deployment](README.md#production-deployment).
 Проверена на практике 13.11.2026 (Beget → Timeweb). Порядок и то, что легко забыть:
 
 1. **DNS** — сменить A-записи всех трёх доменов (+`www.`) заранее,
