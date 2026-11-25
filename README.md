@@ -289,6 +289,41 @@ Add 4 secrets to the GitHub repo (`Settings → Secrets and variables → Action
 | `SSH_PRIVATE_KEY` | contents of `~/.ssh/github_deploy` |
 | `PROJECT_PATH` | `/var/www/tee-su` |
 
+### Moving to another server
+
+When the old server is still alive, move without downtime: certificates, secrets, media, the database and the deploy key travel in one archive, so nothing is reissued and GitHub secrets stay the same.
+
+1. New server: run Step 1.
+2. Old server: dump the database and pack everything that is not in git:
+
+```bash
+docker exec tee-su-db pg_dump -U postgres teesu | gzip > /root/backups/teesu-move.sql.gz
+tar czf /root/move.tgz -C / \
+  etc/letsencrypt \
+  var/www/tee-su/backend/.env \
+  var/www/tee-su/backend/uploads \
+  root/backups/teesu-move.sql.gz \
+  root/.ssh/github_deploy.pub
+```
+
+3. Copy `/root/move.tgz` to the new server (`scp`, directly or through your machine).
+4. New server: unpack, restore the database **before** the first deploy (the backend creates tables and default rows on start, and the dump would clash with them), then deploy:
+
+```bash
+tar xzf /root/move.tgz -C /
+cat /root/.ssh/github_deploy.pub >> /root/.ssh/authorized_keys
+
+cd /var/www/tee-su
+docker compose -f docker-compose.prod.yml up -d db
+until docker exec tee-su-db pg_isready -U postgres; do sleep 1; done
+gunzip -c /root/backups/teesu-move.sql.gz | docker exec -i tee-su-db psql -U postgres teesu
+bash deploy.sh
+```
+
+5. Check the new server before touching DNS: `curl -I --resolve tee.su:443:<new-ip> https://tee.su/`.
+6. Point the A-records to the new IP. Don't edit content in the admin panel or push to `main` between the dump and the DNS switch.
+7. After DNS has switched: `certbot renew --dry-run` and Step 6. Delete every copy of `move.tgz`: it holds secrets and certificate private keys.
+
 ### Useful commands
 
 ```bash
