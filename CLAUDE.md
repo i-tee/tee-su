@@ -19,8 +19,8 @@ GitHub, делает владелец:
 - `checkout`/`restore`/`stash` файлов;
 - PR на GitHub.
 
-Слияние `develop` в `main` и пуш в `main` — это выкат на прод (автодеплой),
-его делает только владелец.
+Любой пуш в `main` — это выкат на прод (автодеплой), его делает только
+владелец.
 
 После завершённого этапа агент даёт владельцу перечень изменённых файлов и
 текст коммита: Conventional Commits, по-английски, одной строкой, без
@@ -57,8 +57,8 @@ backend) + nginx + Postgres, всё в Docker. Production — один VPS.
 - **NestJS 11** + TypeORM 0.3
 - **PostgreSQL 16**
 - **AdminJS 6** — админ-панель на `/admin`
-- Медиа — локальный диск `backend/uploads` (`STORAGE_DRIVER=local`), S3 —
-  опционально через переключатель (см. "Хранилище медиа")
+- Медиа — S3 Beget на `cloud.tee.su` (`STORAGE_DRIVER=s3`), локальный диск —
+  через переключатель (см. "Хранилище медиа")
 
 ### Инфраструктура
 
@@ -108,7 +108,8 @@ tee-su/
 ├── nginx/nginx.conf               ← reverse proxy + SSL + редирект-домены
 ├── docker-compose.yml             ← dev
 ├── docker-compose.prod.yml        ← prod
-└── deploy.sh                      ← скрипт деплоя (вызывается из Actions)
+├── deploy.sh                      ← скрипт деплоя (вызывается из Actions)
+└── backup.sh                      ← ночной бэкап БД: диск сервера + S3 (cron)
 ```
 
 ---
@@ -216,8 +217,25 @@ Email из `personSameAs` извлекается в отдельное поле 
 bind mount `./backend/uploads:/app/uploads`, иначе `--force-recreate`
 стирал бы их. На новом сервере файлы копировать вручную (`scp`).
 
-Сейчас (ноябрь 2026) работаем на `local`. План: поднять S3 на Beget
-(облако на `cloud.tee.su`) и переключить `STORAGE_DRIVER=s3` с новыми ключами.
+### Прод: S3 Beget на `cloud.tee.su` (с 26.11.2026)
+
+- Бакет `4efedbdedb3f-cloude`, endpoint `https://s3.ru1.storage.beget.cloud`,
+  регион `ru1`. `cloud.tee.su` — "свой поддомен" бакета в панели Beget:
+  CNAME на `s3.ru1.storage.beget.cloud`, сертификат Let's Encrypt выпускает
+  и продлевает Beget.
+- **Бакет приватный**, переключатель "Сделать все материалы публичными" в
+  панели **выключен**. Картинки открыты, потому что `S3UploadService`
+  кладёт каждую с `ACL: public-read`; Beget объектные ACL соблюдает
+  (проверено). Список бакета и бэкапы в `backups/` отдают 403. Включить
+  публичную политику бакета = открыть дампы БД всем.
+- Перенос старой локальной картинки в S3: в админке открыть Image → флажок
+  `saveToS3` → сохранить. Флажок переписывает только `image.url`. Адреса,
+  вписанные текстом в других местах (`SeoMeta.ogImage`, `personImage`), —
+  править руками, иначе они ведут на удалённый локальный файл (так было
+  при переезде 26.11).
+- Ключи S3 — в серверном `backend/.env`. В dev — `STORAGE_DRIVER=local`,
+  чтобы не писать в прод-бакет (`backup.sh` в dev не запускается).
+- Копия локальных фото до переноса — `/root/uploads-before-s3` на сервере.
 
 ---
 
@@ -249,7 +267,20 @@ docker exec -i tee-su-db psql -U postgres -d teesu < backend/seed/restore-2026-1
 
 Применять после первого старта бэкенда (таблицы создаёт `synchronize: true`).
 Если контент менялся в AdminJS — сид устарел, свежий источник правды —
-бэкап `/root/backups/`.
+бэкап (`/root/backups/` на сервере или `backups/` в S3, см. "Бэкапы БД").
+
+### Бэкапы БД — `backup.sh`
+
+cron root в 4:00 UTC: `bash /var/www/tee-su/backup.sh >> /var/log/teesu-backup.log 2>&1`.
+
+- `pg_dump | gzip` → `/root/backups/teesu-YYYYMMDD.sql.gz`, хранится 14 дней.
+- Копия → `s3:<S3_BUCKET>/backups/` через `rclone` (пакет Ubuntu), хранится
+  30 дней. Ключи и endpoint скрипт читает из `backend/.env`, rclone
+  настраивается переменными окружения — отдельного `rclone.conf` нет
+  (отсюда безвредный `NOTICE: Config file ... not found` в логе).
+- Загружается без ACL → приватно. Скачать дамп: панель Beget → бакет →
+  "Управление файлами" → `backups/`.
+- Успешный запуск пишет в лог строку `... ok <размер> → s3:.../backups`.
 
 ---
 
@@ -286,9 +317,11 @@ docker compose -f docker-compose.prod.yml up -d --force-recreate frontend
 - `SSH_PRIVATE_KEY` — содержимое `~/.ssh/github_deploy` с сервера
 - `PROJECT_PATH` — `/var/www/tee-su`
 
-Рабочая ветка — `develop`, в `main` перед выкаткой мержит и пушит владелец
-(см. "Правила работы агента"). Перед мержем
-всегда `git pull origin main`: на GitHub в `main` бывают merge-коммиты от PR.
+С 26.11.2026 в репозитории одна ветка — `main` (`develop` удалена: больших
+изменений не планируется). Коммитит и пушит владелец (см. "Правила работы
+агента"), каждый пуш сразу уходит на прод. Перед коммитом —
+`git pull origin main`. Если снова понадобится ветка для долгой работы —
+заводит владелец, в `main` она попадает слиянием.
 
 ### `deploy.sh` на сервере
 
@@ -305,6 +338,15 @@ docker image prune -f
 
 `restart nginx` — отдельным шагом, чтобы подхватывал новый `nginx.conf`,
 который монтирован как volume (а не вшит в image).
+
+### Маршруты nginx на `tee.su`
+
+- `/admin`, `/uploads` → backend как есть;
+- `/api/*` → backend без префикса: публичный `https://tee.su/api/seo-meta` =
+  `GET /seo-meta` бэкенда. Голый `https://tee.su/seo-meta` уходит во фронт
+  и отдаёт 404 — это не поломка;
+- всё остальное → frontend. Фронт ходит к API внутри Docker-сети
+  (`API_URL=http://backend:4000`), не через nginx.
 
 ---
 
@@ -505,7 +547,8 @@ docker nginx), падало молча, серт истёк. mrtorres.ru и xab.
 - **Фото** — оригиналы у владельца. Запасной источник был в
   `frontend/.next/dev/cache/images/`: кеш Next Image-оптимизатора хранит
   уменьшенные копии всех когда-либо показанных картинок.
-- **S3** — отключён переключателем `STORAGE_DRIVER=local`.
+- **S3** — отключён переключателем `STORAGE_DRIVER=local`; 26.11.2026
+  включён обратно на новом бакете Beget (`cloud.tee.su`).
 - **Хостинг** — 13.11.2026 временно Timeweb, 25.11.2026 обратно на новый
   VDS Beget (см. "Состояние сервера" и "Disaster recovery").
 
@@ -518,16 +561,14 @@ docker nginx), падало молча, серт истёк. mrtorres.ru и xab.
 Зафиксировано, чтобы помнить: это **известный плохой паттерн**, а не
 "так задумано".
 
-### Нет бэкапов БД
+### Бэкапы у того же провайдера, теми же ключами
 
-На сервере Beget (с 25.11.2026) cron бэкапа **не настроен** — копий базы
-нет ни локально, ни вне сервера. Единственный снимок — дамп переезда
-`/root/backups/teesu-move.sql.gz` на том же сервере.
+С 26.11.2026 дамп уходит в S3 — вне сервера, но у того же Beget, что и
+VDS. Падение Beget целиком (как в ноябре 2026) снова оставит без копий.
+Плюс ключ S3 общий с сайтом: у бэкенда есть право удалять и дампы.
 
-План владельца: cron с отправкой дампа в S3 Beget, вместе с облаком на
-`cloud.tee.su`. Локальная часть — строка из README, шаг 6; к ней добавится
-выгрузка в S3. Копия на том же сервере, что и БД, от смерти сервера не
-спасает (ноябрь 2026).
+Что улучшить при случае: второй бакет у другого провайдера (rclone
+умеет), отдельный ключ только на запись для бэкапов.
 
 ### `synchronize: true` в TypeORM
 
@@ -593,6 +634,8 @@ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
   него сборка падает на сервере с 2 ГБ.
 - `bodyParser: false` в `backend/src/main.ts` — AdminJS ломается.
 - `ADMIN_AUTH_ENABLED=true` в prod `.env` — иначе `/admin` открыт всем.
+- Переключатель "Сделать все материалы публичными" у бакета S3 —
+  **выключен**. Включить = открыть всем дампы БД в `backups/`.
 - Docker volume `tee-su_pgdata` — **ВСЯ БАЗА**. `docker compose down -v`
   или `docker volume rm` уничтожат контент.
 
@@ -625,8 +668,9 @@ cd /var/www/tee-su && \
 # Запрос к фронтенду минуя nginx (дебаг)
 docker exec tee-su-frontend wget -qO- http://localhost:3000/ | head -100
 
-# Ручной бэкап БД
-docker exec tee-su-db pg_dump -U postgres teesu | gzip > /root/backups/teesu-manual.sql.gz
+# Бэкап БД вне расписания (диск + S3) и его лог
+bash /var/www/tee-su/backup.sh
+tail /var/log/teesu-backup.log
 
 # Восстановление БД из бэкапа
 gunzip -c /root/backups/teesu-YYYYMMDD.sql.gz | docker exec -i tee-su-db psql -U postgres teesu
@@ -634,7 +678,7 @@ gunzip -c /root/backups/teesu-YYYYMMDD.sql.gz | docker exec -i tee-su-db psql -U
 
 ---
 
-## Состояние сервера (snapshot 25.11.2026)
+## Состояние сервера (snapshot 26.11.2026)
 
 VDS на Beget, переехали с временного Timeweb 25.11.2026.
 
@@ -661,6 +705,8 @@ VDS на Beget, переехали с временного Timeweb 25.11.2026.
 
 A-записи `tee.su`, `mrtorres.ru`, `xab.su` и их `www.` → `45.9.43.241`.
 Только A-записи, без CNAME. DNS-зона управляется в панели Beget, TTL 600.
+Отдельно: `cloud.tee.su` — CNAME на `s3.ru1.storage.beget.cloud` (бакет S3,
+не сервер).
 
 ### Безопасность
 
@@ -689,8 +735,13 @@ A-записи `tee.su`, `mrtorres.ru`, `xab.su` и их `www.` → `45.9.43.241
   `/etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh`.
   Серты действительны до 11.02.2027, `certbot renew --dry-run` на Beget
   прошёл 25.11.2026.
-- **Бэкап БД** — ⚠️ **нет**, crontab root пуст (см. техдолг "Нет бэкапов
-  БД"). Ждёт S3 на Beget.
+- **Бэкап БД** — cron root, 4:00 UTC: `backup.sh` → `/root/backups/` (14
+  дней) + S3 `backups/` (30 дней), лог `/var/log/teesu-backup.log`. Первый
+  запуск 26.11.2026 — ok (см. "Бэкапы БД").
+
+Установлено сверх README, шаг 1: `rclone` 1.60 (для `backup.sh`).
+Ядро обновлено до 6.8.0-151, но сервер ещё не перезагружен (на 26.11.2026
+работает 6.8.0-147).
 
 ---
 
@@ -714,7 +765,9 @@ A-записи `tee.su`, `mrtorres.ru`, `xab.su` и их `www.` → `45.9.43.241
    и так по всем доменам.
 5. **DNS** — шесть A-записей на новый IP. От дампа до смены DNS не правят
    админку и не пушат в `main` (правки потеряются / деплой уйдёт на старый).
-6. **После DNS** — `certbot renew --dry-run`, cron бэкапа, обновить этот файл.
+6. **После DNS** — `certbot renew --dry-run`, `apt install rclone` + cron
+   `backup.sh` (README, шаг 6), обновить этот файл. Медиа в S3 переезжать
+   не нужно — бакет не привязан к серверу.
 
 Архив содержит секреты и закрытые ключи сертификатов — после переезда
 удалить все его копии.
@@ -732,11 +785,11 @@ A-записи `tee.su`, `mrtorres.ru`, `xab.su` и их `www.` → `45.9.43.241
 3. **Секреты и медиа** — `scp` для `backend/.env` и `backend/uploads/*`.
    В серверном `.env` выставить `ADMIN_AUTH_ENABLED=true`.
 4. **SSL** — standalone ДО первого деплоя (README, шаг 3).
-5. **Деплой + контент** — `deploy.sh`, затем свежий бэкап
+5. **Деплой + контент** — `deploy.sh`, затем свежий дамп из S3 `backups/`
    (`gunzip ... | psql`), а если его нет — сид `restore-2026-11.sql`.
 6. **SSL обновление** — `certbot reconfigure` на webroot + хук рестарта
    nginx + `certbot renew --dry-run` (README, шаг 5).
-7. **Бэкапы** — cron (README, шаг 6).
+7. **Бэкапы** — `rclone` + cron `backup.sh` (README, шаг 6).
 8. **GitHub Actions** — новый deploy-ключ, обновить секрет
    `SSH_PRIVATE_KEY`. `SSH_HOST=tee.su` менять не нужно.
 9. **Обновить этот файл** — раздел "Состояние сервера".

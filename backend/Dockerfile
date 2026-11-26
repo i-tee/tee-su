@@ -7,7 +7,7 @@ COPY . .
 # на сервере с 2 ГБ не хватает. Недостающее добирается из swap.
 RUN NODE_OPTIONS=--max-old-space-size=1536 npm run build
 # Pre-generate AdminJS components bundle during build.
-# mkdir uploads because LocalProvider checks the directory exists at init time.
+# The script creates uploads/ itself: LocalProvider checks it exists at init time.
 RUN node scripts/pre-bundle.js
 
 FROM node:20-alpine AS runner

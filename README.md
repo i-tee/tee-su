@@ -104,6 +104,7 @@ tee-su/
 ├── docker-compose.yml             # Development
 ├── docker-compose.prod.yml        # Production
 ├── deploy.sh                      # Deploy script (called by GitHub Actions)
+├── backup.sh                      # Nightly DB backup: local disk + S3 (cron)
 └── CLAUDE.md                      # Architecture notes & runbook
 ```
 
@@ -154,7 +155,8 @@ ADMIN_COOKIE_SECRET=
 # Media storage: local | s3
 STORAGE_DRIVER=local
 
-# S3 (used only when STORAGE_DRIVER=s3)
+# S3: media when STORAGE_DRIVER=s3, DB backups (backup.sh) always.
+# Keep STORAGE_DRIVER=local in development so uploads don't go to the production bucket.
 S3_ENDPOINT=
 S3_BUCKET=
 S3_ACCESS_KEY=
@@ -174,11 +176,15 @@ Images are uploaded through the admin panel. Where they end up depends on `STORA
 
 Records that already hold a full URL keep working with either driver.
 
+The bucket itself stays private: each media file is uploaded with a `public-read` ACL, so images open by direct link while the bucket listing and the DB backups in `backups/` stay closed. Don't turn on a bucket-wide public policy.
+
+To move an existing local image to S3, open it in the admin panel, check **Save To S3** and save. URLs typed as plain text elsewhere (for example `ogImage` and `personImage` in SEO Meta) are not rewritten — update them by hand.
+
 ---
 
 ## API
 
-Base URL: `http://localhost:4000`
+Base URL: `http://localhost:4000` in development, `https://tee.su/api` in production (nginx strips the `/api` prefix; `/uploads` and `/admin` are proxied without it).
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -266,9 +272,15 @@ certbot renew --dry-run
 
 ### Step 6 — Database backups
 
+`backup.sh` dumps the database to `/root/backups/` (kept 14 days) and copies the dump to `backups/` in the S3 bucket (kept 30 days). It reads the S3 settings from `backend/.env`, so fill in the `S3_*` variables first.
+
 ```bash
-(crontab -l 2>/dev/null; echo '0 4 * * * docker exec tee-su-db pg_dump -U postgres teesu | gzip > /root/backups/teesu-$(date +\%Y\%m\%d).sql.gz && find /root/backups -name "teesu-*.sql.gz" -mtime +14 -delete') | crontab -
+apt install -y rclone
+bash /var/www/tee-su/backup.sh
+(crontab -l 2>/dev/null; echo '0 4 * * * bash /var/www/tee-su/backup.sh >> /var/log/teesu-backup.log 2>&1') | crontab -
 ```
+
+The test run must end with a line like `... ok 4.0K → s3:<bucket>/backups`.
 
 ### Step 7 — Auto-deploy via GitHub Actions
 
